@@ -1,0 +1,3 @@
+[submodule "contact_graspnet_benchmark/orig"]
+	path = contact_graspnet_benchmark/orig
+	url = https://github.com/m0dd0/contact_graspnet.git
