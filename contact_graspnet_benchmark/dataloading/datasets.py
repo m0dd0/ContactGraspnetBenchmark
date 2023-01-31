@@ -10,14 +10,6 @@ class OrigExampleDataset:
         self.dataset_dir = dataset_dir
 
     def __getitem__(self, idx: int):
-        segmap, rgb, depth, pc_full, pc_colors = None, None, None, None, None
-
-        # if K is not None:
-        #     if isinstance(K,str):
-        #         cam_K = eval(K)
-        #     cam_K = np.array(K).reshape(3,3)
-
-        # if '.np' in p:
         sample_path = self.dataset_dir / f"{idx}.npy"
         assert sample_path.exists()
 
