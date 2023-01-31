@@ -20,6 +20,7 @@ setuptools.setup(
     # therfore it might be useful to fix the versions someday
     install_requires=[
         "numpy",
+        "nptyping",
         # TODO
     ],
     extras_require={"dev": ["black", "pylint", "jupyter"]},
