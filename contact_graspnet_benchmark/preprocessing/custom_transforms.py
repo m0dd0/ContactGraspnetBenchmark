@@ -1,13 +1,14 @@
+from nptyping import NDArray, Shape, Float
+
 from contact_graspnet_benchmark.orig.contact_graspnet.data import depth2pc
 
 
 class Depth2PointcloudConverter:
-    def __init__(self, K, z_range):
-        self.K = K
+    def __init__(self, z_range):
         self.z_range = z_range
 
-    def __call__(self, depth, rgb=None):
-        pc_full, pc_colors = depth2pc(depth, self.K, rgb)
+    def __call__(self, depth: NDArray[Shape["1,H,W"], Float], K, rgb=None):
+        pc_full, pc_colors = depth2pc(depth, K, rgb)
 
         # Threshold distance
         if pc_colors is not None:
