@@ -1,1 +1,1 @@
-# contact_graspnet_benchark
+# contact_grasp_net
