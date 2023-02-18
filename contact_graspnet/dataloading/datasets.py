@@ -11,23 +11,45 @@ datatypes.sample instance as input.
 from pathlib import Path
 from typing import Callable
 
-from torch.utils.data import Dataset
+import numpy as np
+from scipy.spatial.transform import Rotation
 
 from ..datatypes import YCBSimulationDataSample
 
-class YCBSimulationData(Dataset):
-    def __init__(self, root: Path, transform: Callable=None):
-        self.root = Path(root)
+
+class YCBSimulationData:
+    def __init__(self, root_dir: Path, transform: Callable = None):
+        self.root_dir = Path(root_dir)
         self.transform = transform
 
-    def __len__(self) -> int:
-        # TODO: Implement this method
-        raise NotImplementedError()
-
+    def __len__(self):
+        return len(list(self.root_dir.glob("*.npz")))
 
     def __getitem__(self, index: int) -> YCBSimulationDataSample:
-        # TODO: Implement this method
-        raise NotImplementedError()
+        all_sample_names = [
+            p.parts[-1] for p in self.root_dir.iterdir() if p.suffix == ".npz"
+        ]
+
+        all_sample_names = sorted(all_sample_names)
+        sample_name = all_sample_names[index]
+        sample_path = self.root_dir / sample_name
+
+        simulation_data = np.load(sample_path)
+
+        sample = YCBSimulationDataSample(
+            rgb=simulation_data["rgb_img"],
+            depth=simulation_data["depth_img"],
+            points=simulation_data["point_cloud"][0],
+            points_color=simulation_data["point_cloud"][1],
+            points_segmented=simulation_data["point_cloud_seg"],
+            segmentation=simulation_data["seg_img"].astype("uint8"),
+            cam_intrinsics=simulation_data["cam_intrinsics"],
+            cam_pos=simulation_data["cam_pos"],
+            cam_rot=Rotation.from_quat(
+                simulation_data["cam_quat"][[1, 2, 3, 0]]
+            ).as_matrix(),
+            name=sample_name.split(".")[0],
+        )
 
         if self.transform is not None:
             sample = self.transform(sample)
