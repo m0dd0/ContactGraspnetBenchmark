@@ -1,8 +1,5 @@
 """This module contains submodules of the network architecture(s) like special layers etc."""
 
-from torchtyping import TensorType
-
-
 # class CustomModuleExample:
 #     def __init__(self):
 #         super().__init__()
