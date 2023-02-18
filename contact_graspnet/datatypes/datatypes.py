@@ -10,6 +10,8 @@ There should be an compatible postprocessing pipeline which outputs these datacl
 from dataclasses import dataclass
 from abc import ABC
 
+from nptyping import NDArray, Shape, Float, Int
+
 
 @dataclass
 class DatasetSample(ABC):
@@ -18,20 +20,31 @@ class DatasetSample(ABC):
 
 @dataclass
 class YCBSimulationDataSample(DatasetSample):
-    attr1: ...
-    attr2: ...
-    attr3: ...
+    name: str
+    rgb: NDArray[Shape["H, W, 3"], Int]
+    depth: NDArray[Shape["H, W"], Float]
+    segmentation: NDArray[Shape["H, W"], Int]
+    points: NDArray[Shape["N, 3"], Float]
+    points_color: NDArray[Shape["N, 3"], Int]
+    points_segmented: NDArray[Shape["N, 3"], Float]
+    cam_intrinsics: NDArray[Shape["3, 3"], Float]
+    cam_pos: NDArray[Shape["3"], Float]
+    cam_rot: NDArray[Shape["3, 3"], Float]
+
 
 # ... dataclasses for other datasets here
+
 
 @dataclass
 class ResultBase(ABC):
     pass
+
 
 @dataclass
 class SomeResult(ResultBase):
     attr1: ...
     attr2: ...
     attr3: ...
+
 
 # ... dataclasses for other results here
