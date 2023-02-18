@@ -22,12 +22,13 @@ of the subpipeline yourself.
 from abc import abstractmethod, ABC
 from typing import Any, Dict
 
-# from torchvision import transforms as T
-# import torch
-# import numpy as np
-from torchtyping import TensorType
+from nptyping import NDArray, Shape, Float, Int
 
-from contact_graspnet.datatypes import DatasetSample, YCBSimulationDataSample
+from contact_graspnet.datatypes import (
+    DatasetSample,
+    YCBSimulationDataSample,
+    OrigExampleDataSample,
+)
 from . import custom_transforms as CT
 
 
@@ -37,24 +38,44 @@ class PreprocessorBase(ABC):
         self.intermediate_results: Dict[str, Any] = {}
 
     @abstractmethod
-    def __call__(self, sample: DatasetSample) -> TensorType["batch", ...]:
+    def __call__(self, sample: DatasetSample) -> NDArray[Shape["N,3"], Float]:
         pass
+
+
+class OrigExampleDataPreprocessor(PreprocessorBase):
+    def __init__(
+        self,
+        depth2points_converter: CT.OrigDepth2Points,
+        z_clipper: CT.ZClipper,
+    ):
+        super().__init__()
+
+        self.depth2points_converter = depth2points_converter
+        self.z_clipper = z_clipper
+
+    def __call__(self, sample: OrigExampleDataSample) -> NDArray[Shape["N,3"], Float]:
+        pointcloud, pointcloud_colors = self.depth2points_converter(
+            sample.depth, sample.cam_intrinsics, sample.rgb
+        )
+        pointcloud = self.z_clipper(pointcloud)
+
+        return pointcloud
 
 
 class YCBSimulationDataPreprocessor(PreprocessorBase):
     def __init__(
-        self, 
-        # submodule_1: CT.ExampleSubmodule = None, 
+        self,
+        # submodule_1: CT.ExampleSubmodule = None,
         # submodule_2: CT.ExampleSubmodule = None
     ):
         super().__init__()
-    
+
         # submodules
         # TODO add submodules here
         # self.example_submodule_1 = exmaple_submodule_1
         # self.example_submodule_2 = exmaple_submodule_2
 
-    def __call__(self, sample: YCBSimulationDataSample) -> TensorType["batch", ...]:
+    def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
         # TODO implement preprocessing pipeline
         # x = network_input
         # if self.example_submodule_1 is not None:
@@ -66,4 +87,3 @@ class YCBSimulationDataPreprocessor(PreprocessorBase):
 
 
 # other preprocessors for other datasets or with completely different preprocessing pipelines ...
-
