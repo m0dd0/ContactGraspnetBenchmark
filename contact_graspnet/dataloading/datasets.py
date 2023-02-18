@@ -14,7 +14,7 @@ from typing import Callable
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from ..datatypes import YCBSimulationDataSample
+from ..datatypes import YCBSimulationDataSample, OrigExampleDataSample
 
 
 class YCBSimulationData:
@@ -49,6 +49,31 @@ class YCBSimulationData:
                 simulation_data["cam_quat"][[1, 2, 3, 0]]
             ).as_matrix(),
             name=sample_name.split(".")[0],
+        )
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample
+
+
+class OrigExampleData:
+    def __init__(self, root_dir: Path, transform: Callable = None):
+        self.root_dir = Path(root_dir)
+        self.transform = transform
+
+    def __len__(self):
+        return len(list(self.root_dir.glob("*.npy")))
+
+    def __getitem__(self, index: int):
+        data = np.load(self.root_dir / f"{index}.npy", allow_pickle=True).item()
+
+        sample = OrigExampleDataSample(
+            rgb=data["rgb"],
+            depth=data["depth"],
+            segmentation=data["seg"],
+            cam_intrinsics=data["K"],
+            name=f"orig_exaple_{index}",
         )
 
         if self.transform is not None:

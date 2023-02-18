@@ -32,7 +32,13 @@ class YCBSimulationDataSample(DatasetSample):
     cam_rot: NDArray[Shape["3, 3"], Float]
 
 
-# ... dataclasses for other datasets here
+@dataclass
+class OrigExampleDataSample(DatasetSample):
+    name: str
+    segmentation: NDArray[Shape["H, W"], Int]  # (720,1280) 0 - 5
+    rgb: NDArray[Shape["H, W, 3"], Int]  # (720,1280,3) 0-255
+    depth: NDArray[Shape["H, W"], Float]  # (720,1280) 0 - 1
+    cam_intrinsics: NDArray[Shape["3, 3"], Float]  # (3,3)
 
 
 @dataclass
