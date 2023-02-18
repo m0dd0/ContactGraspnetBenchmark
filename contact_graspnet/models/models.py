@@ -2,6 +2,7 @@
 
 import tensorflow.compat.v1 as tf
 from nptyping import NDArray, Shape, Float, Int
+import yaml
 
 # from .custom_modules import CustomModuleExample
 from .base import BaseModel
@@ -12,10 +13,15 @@ from contact_graspnet.orig.contact_graspnet.contact_grasp_estimator import (
 
 
 class ContactGraspnet(BaseModel):
-    def __init__(self, config, checkpoint_dir):
+    def __init__(self, config_path, checkpoint_dir, batch_size=1):
         super().__init__()
 
         # TODO recator grasp estimator
+
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+        config["OPTIMIZER"]["batch_size"] = batch_size
+
         self._grasp_estimator = GraspEstimator(config)
         self._grasp_estimator.build_network()
 
