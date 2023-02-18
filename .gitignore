@@ -2,8 +2,8 @@
 __pycache__
 *.egg-info
 
-contact_grasp_net/data/*
-contact_grasp_net/checkpoints/*
+contact_graspnet/data/*
+contact_graspnet/checkpoints/*
 notebooks/00_experiments.ipynb
 
 venv

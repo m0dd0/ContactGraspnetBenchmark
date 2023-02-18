@@ -12,14 +12,14 @@ from matplotlib import pyplot as plt
 import yaml
 
 
-from contact_grasp_net.dataloading.datasets import YCBSimulationData
-from contact_grasp_net.datatypes import YCBSimulationDataSample
-from contact_grasp_net.preprocessing import Preprocessor, PreprocessorBase
-from contact_grasp_net.postprocessing import Postprocessor, PostprocessorBase
-from contact_grasp_net.models import MyModel
-from contact_grasp_net.utils import visualization as vis
-from contact_grasp_net.utils.export import Exporter
-from contact_grasp_net.utils.config import module_from_config
+from contact_graspnet.dataloading.datasets import YCBSimulationData
+from contact_graspnet.datatypes import YCBSimulationDataSample
+from contact_graspnet.preprocessing import Preprocessor, PreprocessorBase
+from contact_graspnet.postprocessing import Postprocessor, PostprocessorBase
+from contact_graspnet.models import MyModel
+from contact_graspnet.utils import visualization as vis
+from contact_graspnet.utils.export import Exporter
+from contact_graspnet.utils.config import module_from_config
 
 
 class End2EndProcessor:
@@ -65,7 +65,7 @@ class End2EndProcessor:
             func (Callable): The function to be applied to each sample.
 
         Returns:
-            Tuple[List[Any], List[Dict[str, Any]]]: The output of the function 
+            Tuple[List[Any], List[Dict[str, Any]]]: The output of the function
             for each sample and the intermediate results.
         """
         output_batch = []

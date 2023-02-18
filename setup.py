@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="contact_grasp_net",
+    name="contact_graspnet",
     version="0.0.1",
     author="Moritz Hesche",
     author_email="mo.hesche@gmail.com",

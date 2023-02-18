@@ -1,3 +1,3 @@
-[submodule "contact_grasp_net/orig"]
-	path = contact_grasp_net/orig
+[submodule "contact_graspnet/orig"]
+	path = contact_graspnet/orig
 	url = https://github.com/m0dd0/contact_graspnet.git

@@ -11,8 +11,8 @@ from typing import List
 from matplotlib import pyplot as plt
 import numpy as np
 
-from contact_grasp_net.datatypes import ImageGrasp, RealGrasp
-from contact_grasp_net.utils.geometry import get_antipodal_points
+from contact_graspnet.datatypes import ImageGrasp, RealGrasp
+from contact_graspnet.utils.geometry import get_antipodal_points
 
 
 def make_tensor_displayable(
@@ -23,7 +23,7 @@ def make_tensor_displayable(
 
     Args:
         tensor: A datastrucutre that can be converted to a numpy array.
-        convert_chw (bool, optional): Converter a chw tensor to a hwc tensor. 
+        convert_chw (bool, optional): Converter a chw tensor to a hwc tensor.
             Defaults to False.
         convert_to_int (bool, optional): Converts the datatype to uint8. Defaults to False.
 
@@ -43,7 +43,6 @@ def make_tensor_displayable(
         tensor = tensor.astype("uint8")
 
     return tensor
-
 
 
 def overview_fig(

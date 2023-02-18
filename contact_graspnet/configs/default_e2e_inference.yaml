@@ -3,14 +3,14 @@
 # method with the other given arguments. If the "constructor" keyword is provided
 # the constructor class method is called instead of the __init__ method. 
 
-class: "contact_grasp_net.utils.processing.End2EndProcessor"
+class: "contact_graspnet.utils.processing.End2EndProcessor"
 
 # otherwise use
 model:
   # name of the class of the torch.nn module, must be importable from models module
   class: "MyModel" 
   # path to the state dict of the module, can be relative to the checkpoints folder optionally
-  state_dict_path: "/path/to/contact/contact_grasp_net/checkoints/default_state_dict.pt"
+  state_dict_path: "/path/to/contact/contact_graspnet/checkoints/default_state_dict.pt"
   # device where the model is put on, optional
   device: "cuda" 
   # parameters which are passed to the init method of the class
@@ -19,7 +19,7 @@ model:
   # if you use a jitted model use:
   # constructor: from_jit
   # path to the jit file, can be relative to the checkpoints folder
-  # jit_path: "/path/to/contact/contact_grasp_net/checkoints/jit_model.ptc"
+  # jit_path: "/path/to/contact/contact_graspnet/checkoints/jit_model.ptc"
 
 preprocessor:
   # name of the class of the preprocessor, must be importable from preprocessor module

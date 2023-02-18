@@ -31,7 +31,7 @@ from typing import Any, Dict
 # import numpy as np
 from torchtyping import TensorType
 
-from contact_grasp_net.datatypes import ResultBase, SomeResult
+from contact_graspnet.datatypes import ResultBase, SomeResult
 from . import custom_transforms as CT
 
 
@@ -47,12 +47,12 @@ class PostprocessorBase(ABC):
 
 class Postprocessor(PostprocessorBase):
     def __init__(
-        self, 
-        # submodule_1: CT.ExampleSubmodule = None, 
+        self,
+        # submodule_1: CT.ExampleSubmodule = None,
         # submodule_2: CT.ExampleSubmodule = None
     ):
         super().__init__()
-    
+
         # submodules
         # TODO add submodules here
         # self.example_submodule_1 = exmaple_submodule_1
