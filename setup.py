@@ -27,6 +27,8 @@ setuptools.setup(
         "mayavi",
         "matplotlib",
         "pyqt5",
+        # the dependencies below have been added during refactoring
+        "npytyping",  # for tf tensors we use string annotations for now
     ],
     extras_require={"dev": ["black", "pylint", "jupyter"]},
     include_package_data=True,
