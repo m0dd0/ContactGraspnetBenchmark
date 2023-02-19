@@ -28,7 +28,7 @@ from typing import Any, Dict, Tuple, List
 
 from nptyping import NDArray, Shape, Float
 
-from contact_graspnet.datatypes import ResultBase, GraspImg
+from contact_graspnet.datatypes import ResultBase, GraspCam
 from . import custom_transforms as CT
 
 
@@ -62,13 +62,13 @@ class Postprocessor(PostprocessorBase):
             NDArray[Shape["N"], Float],
             NDArray[Shape["N, 3"], Float],
         ],
-    ) -> List[GraspImg]:
-        grasps_img = []
+    ) -> List[GraspCam]:
+        grasps_cam = []
         for pose, score, contact_point in zip(
             network_output[0], network_output[1], network_output[2]
         ):
-            grasps_img.append(
-                GraspImg(
+            grasps_cam.append(
+                GraspCam(
                     score=score,
                     contact_point=contact_point,
                     pos=pose[:3, 3],
@@ -76,10 +76,10 @@ class Postprocessor(PostprocessorBase):
                 )
             )
 
-        self.intermediate_results["all_grasps"] = grasps_img
+        self.intermediate_results["all_grasps"] = grasps_cam
 
-        top_grasps = grasps_img
+        top_grasps = grasps_cam
         if self.top_score_filter is not None:
-            top_grasps = self.top_score_filter(grasps_img)
+            top_grasps = self.top_score_filter(grasps_cam)
 
         return top_grasps

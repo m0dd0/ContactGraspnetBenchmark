@@ -16,7 +16,7 @@ import mayavi.mlab as mlab
 
 from contact_graspnet.utils.misc import posrot2pose
 from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
-from contact_graspnet.datatypes import GraspImg
+from contact_graspnet.datatypes import GraspCam
 
 
 def make_tensor_displayable(
@@ -80,7 +80,7 @@ def visualize_pointcloud(
 
 def mlab_pose_vis(
     pointcloud: NDArray[Shape["N, 3"], Float],
-    grasps: List[GraspImg],
+    grasps: List[GraspCam],
     pointcloud_colors: NDArray[Shape["N, 3"], Float] = None,
     gripper_width: float = 0.08,
     image_path: Path = None,

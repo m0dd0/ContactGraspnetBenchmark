@@ -40,20 +40,29 @@ def process_dataset(
 
         pointcloud = preprocessor(sample)
         network_output = (pred_grasps_cam, scores, contact_pts) = model(pointcloud)
-        grasps_img = postprocessor(network_output)
+        grasps_cam = postprocessor(network_output)
 
-        vis_temp_path = Path.cwd() / "temp.png"
+        all_grasps_vis_path = Path.cwd() / "all_grasps.png"
+        best_grasp_vis_path = Path.cwd() / "best_grasp.png"
         if visualize:
             mlab_pose_vis(
                 pointcloud,
-                grasps_img,
+                grasps_cam,
                 preprocessor.intermediate_results["pointcloud_colors"],
-                image_path=vis_temp_path,
+                image_path=all_grasps_vis_path,
+            )
+
+            mlab_pose_vis(
+                pointcloud,
+                [sorted(grasps_cam, key=lambda g: g.score, reverse=True)[0]],
+                preprocessor.intermediate_results["pointcloud_colors"],
+                image_path=best_grasp_vis_path,
             )
 
         export_data = {
-            "mlab_vis.png": vis_temp_path if visualize else None,
-            "grasps_img": grasps_img,
+            "all_grasps.png": all_grasps_vis_path if visualize else None,
+            "best_grasp.png": best_grasp_vis_path if visualize else None,
+            "grasps_cam": grasps_cam,
             # we also export the sample data
             "sample_segmentation": sample.segmentation,
             "sample_rgb": Image.fromarray(sample.rgb),
@@ -78,4 +87,3 @@ if __name__ == "__main__":
     #     config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
     #     visualize=True,
     # )
-
