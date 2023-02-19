@@ -3,6 +3,7 @@ from typing import Union
 
 import yaml
 from PIL import Image
+import appdirs
 
 from contact_graspnet.dataloading import OrigExampleData, YCBSimulationData
 from contact_graspnet.utils.visualization import mlab_pose_vis
@@ -42,8 +43,8 @@ def process_dataset(
         network_output = (pred_grasps_cam, scores, contact_pts) = model(pointcloud)
         grasps_cam = postprocessor(network_output)
 
-        all_grasps_vis_path = Path.cwd() / "all_grasps.png"
-        best_grasp_vis_path = Path.cwd() / "best_grasp.png"
+        all_grasps_vis_path = Path(appdirs.user_cache_dir()) / "all_grasps_temp.png"
+        best_grasp_vis_path = Path(appdirs.user_cache_dir()) / "best_grasp_temp.png"
         if visualize:
             mlab_pose_vis(
                 pointcloud,
@@ -54,7 +55,9 @@ def process_dataset(
 
             mlab_pose_vis(
                 pointcloud,
-                [sorted(grasps_cam, key=lambda g: g.score, reverse=True)[0]],
+                [sorted(grasps_cam, key=lambda g: g.score, reverse=True)[0]]
+                if len(grasps_cam) > 0
+                else [],
                 preprocessor.intermediate_results["pointcloud_colors"],
                 image_path=best_grasp_vis_path,
             )
@@ -74,16 +77,16 @@ def process_dataset(
 
 
 if __name__ == "__main__":
-    process_dataset(
-        dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
-        result_path=get_root_dir() / "data" / "results" / "orig_test_data",
-        config_path=get_root_dir() / "configs" / "default_example_inference.yaml",
-        visualize=True,
-    )
-
     # process_dataset(
-    #     dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_1"),
-    #     result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_1",
-    #     config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
+    #     dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
+    #     result_path=get_root_dir() / "data" / "results" / "orig_test_data",
+    #     config_path=get_root_dir() / "configs" / "default_example_inference.yaml",
     #     visualize=True,
     # )
+
+    process_dataset(
+        dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_1"),
+        result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_1",
+        config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
+        visualize=True,
+    )
