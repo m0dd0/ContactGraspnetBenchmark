@@ -5,21 +5,22 @@ useful to add more converters to the End2EndProcessor class.
 """
 from typing import Dict, Any, Callable, List, Tuple
 from copy import deepcopy
-from pathlib import Path
 
-import torch
-from matplotlib import pyplot as plt
-import yaml
+# from pathlib import Path
+
+# from matplotlib import pyplot as plt
+# import yaml
 
 
-from contact_graspnet.dataloading.datasets import YCBSimulationData
-from contact_graspnet.datatypes import YCBSimulationDataSample
+# from contact_graspnet.dataloading.datasets import YCBSimulationData
+from contact_graspnet.datatypes import DatasetSample  # , YCBSimulationDataSample
 from contact_graspnet.preprocessing import Preprocessor, PreprocessorBase
 from contact_graspnet.postprocessing import Postprocessor, PostprocessorBase
 from contact_graspnet.models import ContactGraspnet
-from contact_graspnet.utils import visualization as vis
-from contact_graspnet.utils.export import Exporter
-from contact_graspnet.utils.config import module_from_config
+
+# from contact_graspnet.utils import visualization as vis
+# from contact_graspnet.utils.export import Exporter
+# from contact_graspnet.utils.config import module_from_config
 
 
 class End2EndProcessor:
@@ -65,7 +66,7 @@ class End2EndProcessor:
             func (Callable): The function to be applied to each sample.
 
         Returns:
-            Tuple[List[Any], List[Dict[str, Any]]]: The output of the function 
+            Tuple[List[Any], List[Dict[str, Any]]]: The output of the function
             for each sample and the intermediate results.
         """
         output_batch = []
@@ -76,7 +77,7 @@ class End2EndProcessor:
 
         return output_batch, intermediate_results
 
-    def __call__(self, samples: List[YCBSimulationDataSample]) -> List[Dict[str, Any]]:
+    def __call__(self, samples: List[DatasetSample]) -> List[Dict[str, Any]]:
         """The call method of the End2EndProcessor class. It takes a list of
         samples and processes them in a batched manner. The intermediate results
         are collected and returned.
@@ -93,27 +94,26 @@ class End2EndProcessor:
         input_batch, preprocessor_results = self._batched_processing(
             samples, self.preprocessor
         )
-        input_batch = torch.stack(input_batch)
 
         # batched inference
-        with torch.no_grad():
-            predictions_batch = self.model(input_batch)
+        # normally here we would execute batched inference but since the model
+        # is not yet implemented in a batched manner, we execute the inference
+        # in a loop
+        predictions_batch = self._batched_processing(samples, self.model)
 
         # batched postprocessing
         postprocessed_batch, posprocessor_results = self._batched_processing(
             predictions_batch, self.postprocessor
         )
 
-        # TODO: further postprocessing here
-
         # batched data collection
         process_data_batch = []
         for i_sample in range(len(samples)):
             process_data = {
-                "preprocessor": preprocessor_results[i_sample],
-                "postprocessor": posprocessor_results[i_sample],
-                "model_input": input_batch[i_sample],
                 "sample": samples[i_sample],
+                "preprocessor": preprocessor_results[i_sample],
+                "model_input": input_batch[i_sample],
+                "postprocessor": posprocessor_results[i_sample],
                 "postprocessed": postprocessed_batch[i_sample],
             }
             process_data_batch.append(process_data)
@@ -121,51 +121,51 @@ class End2EndProcessor:
         return process_data_batch
 
 
-def process_dataset(
-    dataset: YCBSimulationData,
-    e2e_processor: End2EndProcessor,
-    exporter: Exporter,
-    batch_size=10,
-):
-    for i_batch in range((len(dataset) // batch_size) + 1):
-        j_start = i_batch * batch_size
-        j_end = min((i_batch + 1) * batch_size, len(dataset))
-        batch = [dataset[j] for j in range(j_start, j_end)]
-        print(f"Processing samples {j_start}...{j_end-1}")
+# def process_dataset(
+#     dataset: YCBSimulationData,
+#     e2e_processor: End2EndProcessor,
+#     exporter: Exporter,
+#     batch_size=10,
+# ):
+#     for i_batch in range((len(dataset) // batch_size) + 1):
+#         j_start = i_batch * batch_size
+#         j_end = min((i_batch + 1) * batch_size, len(dataset))
+#         batch = [dataset[j] for j in range(j_start, j_end)]
+#         print(f"Processing samples {j_start}...{j_end-1}")
 
-        process_data_batch = e2e_processor(batch)
+#         process_data_batch = e2e_processor(batch)
 
-        for process_data in process_data_batch:
-            fig = vis.overview_fig(
-                fig=plt.figure(figsize=(20, 20)),
-                # TODO more args here
-            )
-            plt.close(fig)
+#         for process_data in process_data_batch:
+#             fig = vis.overview_fig(
+#                 fig=plt.figure(figsize=(20, 20)),
+#                 # TODO more args here
+#             )
+#             plt.close(fig)
 
-            export_data = {
-                # "sample_attr": process_data["sample"].attr,
-                # "result_attr": process_data["postprocessed"].attr,
-                # more data here
-                "overview": fig,
-            }
+#             export_data = {
+#                 # "sample_attr": process_data["sample"].attr,
+#                 # "result_attr": process_data["postprocessed"].attr,
+#                 # more data here
+#                 "overview": fig,
+#             }
 
-            _ = exporter(export_data, f"{process_data['sample'].name}")
+#             _ = exporter(export_data, f"{process_data['sample'].name}")
 
 
-def process_YCBSimulationData(
-    dataset_path: Path, config_path: Path, export_path: Path, batch_size: int
-):
-    with open(config_path) as f:
-        config = yaml.safe_load(f)
+# def process_YCBSimulationData(
+#     dataset_path: Path, config_path: Path, export_path: Path, batch_size: int
+# ):
+#     with open(config_path) as f:
+#         config = yaml.safe_load(f)
 
-    dataset = YCBSimulationData(dataset_path)
+#     dataset = YCBSimulationData(dataset_path)
 
-    e2e_processor = module_from_config(config)
+#     e2e_processor = module_from_config(config)
 
-    exporter = Exporter(export_dir=export_path)
+#     exporter = Exporter(export_dir=export_path)
 
-    export_path.mkdir(parents=True, exist_ok=True)
-    with open(export_path / "default_e2e_inference.yaml", "w") as f:
-        yaml.dump(config, f)
+#     export_path.mkdir(parents=True, exist_ok=True)
+#     with open(export_path / "default_e2e_inference.yaml", "w") as f:
+#         yaml.dump(config, f)
 
-    process_dataset(dataset, e2e_processor, exporter, batch_size)
+#     process_dataset(dataset, e2e_processor, exporter, batch_size)
