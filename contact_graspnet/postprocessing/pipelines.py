@@ -44,6 +44,7 @@ class PostprocessorBase(ABC):
             NDArray[Shape["N,4,4"], Float],
             NDArray[Shape["N"], Float],
             NDArray[Shape["N, 3"], Float],
+            NDArray[Shape["N"], Float],
         ],
     ) -> List[ResultBase]:
         pass
@@ -61,11 +62,12 @@ class Postprocessor(PostprocessorBase):
             NDArray[Shape["N,4,4"], Float],
             NDArray[Shape["N"], Float],
             NDArray[Shape["N, 3"], Float],
+            NDArray[Shape["N"], Float],
         ],
     ) -> List[GraspCam]:
         grasps_cam = []
-        for pose, score, contact_point in zip(
-            network_output[0], network_output[1], network_output[2]
+        for pose, score, contact_point, width in zip(
+            network_output[0], network_output[1], network_output[2], network_output[3]
         ):
             grasps_cam.append(
                 GraspCam(
@@ -73,6 +75,7 @@ class Postprocessor(PostprocessorBase):
                     contact_point=contact_point,
                     pos=pose[:3, 3],
                     orientation=pose[:3, :3],
+                    width=width,
                 )
             )
 

@@ -50,13 +50,14 @@ class ContactGraspnet(BaseModel):
         NDArray[Shape["N,4,4"], Float],
         NDArray[Shape["N"], Float],
         NDArray[Shape["N, 3"], Float],
+        NDArray[Shape["N"], Float],
     ]:
         # we never do segmentation/local regions in this model, this should be done in the preprocessing
         (
             pred_grasps_cam,
             scores,
             contact_pts,
-            _,
+            gripper_openings,
         ) = self._grasp_estimator.predict_scene_grasps(
             self._sess,
             pc_full
@@ -74,4 +75,4 @@ class ContactGraspnet(BaseModel):
         scores = scores[-1]
         contact_pts = contact_pts[-1]
 
-        return pred_grasps_cam, scores, contact_pts
+        return pred_grasps_cam, scores, contact_pts, gripper_openings

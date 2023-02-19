@@ -82,7 +82,6 @@ def mlab_pose_vis(
     pointcloud: NDArray[Shape["N, 3"], Float],
     grasps: List[GraspCam],
     pointcloud_colors: NDArray[Shape["N, 3"], Float] = None,
-    gripper_width: float = 0.08,
     image_path: Path = None,
     image_size: Tuple = (640, 480),
 ):
@@ -94,8 +93,8 @@ def mlab_pose_vis(
         scores={-1: np.array([g.score for g in grasps])},
         plot_opencv_cam=False,
         pc_colors=pointcloud_colors,
-        gripper_openings=None,
-        gripper_width=gripper_width,
+        gripper_openings={-1: np.array([g.width for g in grasps])},
+        gripper_width=None,
     )
 
     if image_path is None:
