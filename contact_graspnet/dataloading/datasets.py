@@ -57,10 +57,10 @@ class YCBSimulationData:
         simulation_data = np.load(sample_path)
 
         sample = YCBSimulationDataSample(
-            rgb=simulation_data["rgb_img"],
+            rgb=(simulation_data["rgb_img"] * 255).astype(np.uint8),
             depth=simulation_data["depth_img"],
             points=simulation_data["point_cloud"][0],
-            points_color=simulation_data["point_cloud"][1],
+            points_color=(simulation_data["point_cloud"][1] * 255).astype(np.uint8),
             points_segmented=simulation_data["point_cloud_seg"],
             segmentation=simulation_data["seg_img"].astype("uint8"),
             cam_intrinsics=simulation_data["cam_intrinsics"],
