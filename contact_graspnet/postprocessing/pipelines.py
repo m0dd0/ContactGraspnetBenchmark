@@ -24,15 +24,13 @@ information etc.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
-# from torchvision import transforms as T
-# import torch
-# import numpy as np
-from torchtyping import TensorType
+from nptyping import NDArray, Shape, Float
 
-from contact_graspnet.datatypes import ResultBase, SomeResult
-from . import custom_transforms as CT
+from contact_graspnet.datatypes import ResultBase, GraspImg
+
+# from . import custom_transforms as CT
 
 
 class PostprocessorBase(ABC):
@@ -41,32 +39,37 @@ class PostprocessorBase(ABC):
         self.intermediate_results: Dict[str, Any] = {}
 
     @abstractmethod
-    def __call__(self, network_output: TensorType) -> ResultBase:
+    def __call__(
+        self,
+        network_output: Tuple[
+            NDArray[Shape["N,4,4"], Float],
+            NDArray[Shape["N"], Float],
+            NDArray[Shape["N, 3"], Float],
+        ],
+    ) -> ResultBase:
         pass
 
 
 class Postprocessor(PostprocessorBase):
-    def __init__(
-        self, 
-        # submodule_1: CT.ExampleSubmodule = None, 
-        # submodule_2: CT.ExampleSubmodule = None
-    ):
-        super().__init__()
-    
-        # submodules
-        # TODO add submodules here
-        # self.example_submodule_1 = exmaple_submodule_1
-        # self.example_submodule_2 = exmaple_submodule_2
+    # def __init__(self):
+    #     super().__init__()
 
-    def __call__(self, network_output: TensorType) -> SomeResult:
-        # TODO implement preprocessing pipeline
-        # x = network_input
-        # if self.example_submodule_1 is not None:
-        #     x = self.example_submodule_2(x)
-        # if self.example_submodule_2 is not None:
-        #     x = self.example_submodule_2(x)
-        # return x
-        raise NotImplementedError()
+    def __call__(
+        self,
+        network_output: Tuple[
+            NDArray[Shape["N,4,4"], Float],
+            NDArray[Shape["N"], Float],
+            NDArray[Shape["N, 3"], Float],
+        ],
+    ) -> GraspImg:
+        grasp_img = GraspImg(
+            score=network_output[1],
+            contact_point=network_output[2],
+            pos=network_output[0][:, :3, 3],
+            orientation=network_output[0][:, :3, :3],
+        )
+
+        return grasp_img
 
 
 # ... other postprocessors here which might use SomeResult as input and process it
