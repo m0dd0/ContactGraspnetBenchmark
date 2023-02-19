@@ -17,6 +17,21 @@ from scipy.spatial.transform import Rotation
 from ..datatypes import YCBSimulationDataSample, OrigExampleDataSample
 
 
+# class Dataset(ABC):
+#     def __init__(self):
+#         self._idx = 0
+
+#     def __iter__(self):
+#         return self
+
+#     def __next__(self):
+#         if self._idx >= len(self):
+#             raise StopIteration()
+#         item = self[self._idx]
+#         self._idx += 1
+#         return item
+
+
 class YCBSimulationData:
     def __init__(self, root_dir: Path, transform: Callable = None):
         self.root_dir = Path(root_dir)
@@ -26,6 +41,11 @@ class YCBSimulationData:
         return len(list(self.root_dir.glob("*.npz")))
 
     def __getitem__(self, index: int) -> YCBSimulationDataSample:
+        if index >= len(self):
+            raise IndexError(
+                f"Index {index} out of range for dataset with length {len(self)}"
+            )
+
         all_sample_names = [
             p.parts[-1] for p in self.root_dir.iterdir() if p.suffix == ".npz"
         ]
@@ -66,6 +86,11 @@ class OrigExampleData:
         return len(list(self.root_dir.glob("*.npy")))
 
     def __getitem__(self, index: int):
+        if index >= len(self):
+            raise IndexError(
+                f"Index {index} out of range for dataset with length {len(self)}"
+            )
+
         data = np.load(self.root_dir / f"{index}.npy", allow_pickle=True).item()
 
         sample = OrigExampleDataSample(
@@ -73,7 +98,7 @@ class OrigExampleData:
             depth=data["depth"],
             segmentation=data["seg"],
             cam_intrinsics=data["K"],
-            name=f"orig_exaple_{index}",
+            name=f"orig_example_{index}",
         )
 
         if self.transform is not None:
