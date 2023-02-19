@@ -14,8 +14,8 @@ from copy import deepcopy
 
 # from contact_graspnet.dataloading.datasets import YCBSimulationData
 from contact_graspnet.datatypes import DatasetSample  # , YCBSimulationDataSample
-from contact_graspnet.preprocessing import Preprocessor, PreprocessorBase
-from contact_graspnet.postprocessing import Postprocessor, PostprocessorBase
+from contact_graspnet.preprocessing import PreprocessorBase
+from contact_graspnet.postprocessing import PostprocessorBase
 from contact_graspnet.models import ContactGraspnet
 
 # from contact_graspnet.utils import visualization as vis
@@ -23,102 +23,102 @@ from contact_graspnet.models import ContactGraspnet
 # from contact_graspnet.utils.config import module_from_config
 
 
-class End2EndProcessor:
-    def __init__(
-        self,
-        model: ContactGraspnet = None,
-        preprocessor: PreprocessorBase = None,
-        postprocessor: PostprocessorBase = None,
-        # more converters here
-    ):
-        """This is a utility class that combines the preprocessing, inference and
-        postprocessing steps into a single callable object. While executing the
-        different steps, it also collects intermediate results and stores them.
-        These results can be used for debugging or visualization purposes.
-        The input of the call is a list of samples, which are processed in a
-        batched manner. The output is a list of dictionaries, where each dictionary
-        contains the results of the processing steps for a single sample.
-        Note that this used no dataloader to since the dataloader is not
-        able to output the intermediate results in the preprocessing steps.
-        Therfore this module only is for evaluation and debugging purposes and not
-        for training.
+# class End2EndProcessor:
+#     def __init__(
+#         self,
+#         model: ContactGraspnet,
+#         preprocessor: PreprocessorBase,
+#         postprocessor: PostprocessorBase
+#         # more converters here
+#     ):
+#         """This is a utility class that combines the preprocessing, inference and
+#         postprocessing steps into a single callable object. While executing the
+#         different steps, it also collects intermediate results and stores them.
+#         These results can be used for debugging or visualization purposes.
+#         The input of the call is a list of samples, which are processed in a
+#         batched manner. The output is a list of dictionaries, where each dictionary
+#         contains the results of the processing steps for a single sample.
+#         Note that this used no dataloader to since the dataloader is not
+#         able to output the intermediate results in the preprocessing steps.
+#         Therfore this module only is for evaluation and debugging purposes and not
+#         for training.
 
-        Args:
-            model (GenerativeResnet, optional): _description_. Defaults to None.
-            preprocessor (PreprocessorBase, optional): _description_. Defaults to None.
-            postprocessor (PostprocessorBase, optional): _description_. Defaults to None.
-        """
-        self.model = model or ContactGraspnet.from_jit()
-        self.preprocessor = preprocessor or Preprocessor()
-        self.postprocessor = postprocessor or Postprocessor()
-        # more converters here
+#         Args:
+#             model (GenerativeResnet, optional): _description_. Defaults to None.
+#             preprocessor (PreprocessorBase, optional): _description_. Defaults to None.
+#             postprocessor (PostprocessorBase, optional): _description_. Defaults to None.
+#         """
+#         self.model = model
+#         self.preprocessor = preprocessor
+#         self.postprocessor = postprocessor
+#         # more converters here
 
-    def _batched_processing(
-        self, samples: List[Any], func: Callable
-    ) -> Tuple[List[Any], List[Dict[str, Any]]]:
-        """Takes a list of samples and a function and applies the function to
-        each sample in the list. The function is assumed to have an attribute
-        "intermediate_results" which is a dictionary containing the intermediate
-        results of the function. These results are collected and returned.
+#     def _batched_processing(
+#         self, samples: List[Any], func: Callable
+#     ) -> Tuple[List[Any], List[Dict[str, Any]]]:
+#         """Takes a list of samples and a function and applies the function to
+#         each sample in the list. The function is assumed to have an attribute
+#         "intermediate_results" which is a dictionary containing the intermediate
+#         results of the function. These results are collected and returned.
 
-        Args:
-            samples (List[Any]): The list of samples.
-            func (Callable): The function to be applied to each sample.
+#         Args:
+#             samples (List[Any]): The list of samples.
+#             func (Callable): The function to be applied to each sample.
 
-        Returns:
-            Tuple[List[Any], List[Dict[str, Any]]]: The output of the function
-            for each sample and the intermediate results.
-        """
-        output_batch = []
-        intermediate_results = []
-        for sample in samples:
-            output_batch.append(func(sample))
-            intermediate_results.append(deepcopy(func.intermediate_results))
+#         Returns:
+#             Tuple[List[Any], List[Dict[str, Any]]]: The output of the function
+#             for each sample and the intermediate results.
+#         """
+#         output_batch = []
+#         intermediate_results = []
+#         for sample in samples:
+#             output_batch.append(func(sample))
+#             intermediate_results.append(deepcopy(func.intermediate_results))
 
-        return output_batch, intermediate_results
+#         return output_batch, intermediate_results
 
-    def __call__(self, samples: List[DatasetSample]) -> List[Dict[str, Any]]:
-        """The call method of the End2EndProcessor class. It takes a list of
-        samples and processes them in a batched manner. The intermediate results
-        are collected and returned.
+#     def __call__(self, samples: List[DatasetSample]) -> List[Dict[str, Any]]:
+#         """The call method of the End2EndProcessor class. It takes a list of
+#         samples and processes them in a batched manner. The intermediate results
+#         are collected and returned.
 
-        Args:
-            samples (List[YCBSimulationDataSample]): The list of samples.
+#         Args:
+#             samples (List[YCBSimulationDataSample]): The list of samples.
 
-        Returns:
-            List[Dict[str, Any]]: A collection of intermediate results for each
-                sample and processing step.
-        """
+#         Returns:
+#             List[Dict[str, Any]]: A collection of intermediate results for each
+#                 sample and processing step.
+#         """
 
-        # batched preprocessing
-        input_batch, preprocessor_results = self._batched_processing(
-            samples, self.preprocessor
-        )
+#         # batched preprocessing
+#         input_batch, preprocessor_results = self._batched_processing(
+#             samples, self.preprocessor
+#         )
 
-        # batched inference
-        # normally here we would execute batched inference but since the model
-        # is not yet implemented in a batched manner, we execute the inference
-        # in a loop
-        predictions_batch = self._batched_processing(samples, self.model)
+#         # batched inference
+#         # normally here we would execute batched inference but since the model
+#         # is not yet implemented in a batched manner, we execute the inference
+#         # in a loop
+#         predictions_batch = self._batched_processing(samples, self.model)
 
-        # batched postprocessing
-        postprocessed_batch, posprocessor_results = self._batched_processing(
-            predictions_batch, self.postprocessor
-        )
+#         # batched postprocessing
+#         postprocessed_batch, posprocessor_results = self._batched_processing(
+#             predictions_batch, self.postprocessor
+#         )
 
-        # batched data collection
-        process_data_batch = []
-        for i_sample in range(len(samples)):
-            process_data = {
-                "sample": samples[i_sample],
-                "preprocessor": preprocessor_results[i_sample],
-                "model_input": input_batch[i_sample],
-                "postprocessor": posprocessor_results[i_sample],
-                "postprocessed": postprocessed_batch[i_sample],
-            }
-            process_data_batch.append(process_data)
+#         # batched data collection
+#         process_data_batch = []
+#         for i_sample in range(len(samples)):
+#             process_data = {
+#                 "sample": samples[i_sample],
+#                 "preprocessor": preprocessor_results[i_sample],
+#                 "model_input": input_batch[i_sample],
+#                 "postprocessor": posprocessor_results[i_sample],
+#                 "postprocessed": postprocessed_batch[i_sample],
+#             }
+#             process_data_batch.append(process_data)
 
-        return process_data_batch
+#         return process_data_batch
 
 
 # def process_dataset(
