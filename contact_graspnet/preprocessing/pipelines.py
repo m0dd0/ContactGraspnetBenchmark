@@ -57,33 +57,23 @@ class OrigExampleDataPreprocessor(PreprocessorBase):
         pointcloud, pointcloud_colors = self.depth2points_converter(
             sample.depth, sample.cam_intrinsics, sample.rgb
         )
-        pointcloud = self.z_clipper(pointcloud)
+
+        pointcloud, pointcloud_colors = self.z_clipper(pointcloud, pointcloud_colors)
+
+        self.intermediate_results["pointcloud_colors"] = pointcloud_colors
 
         return pointcloud
 
 
 class YCBSimulationDataPreprocessor(PreprocessorBase):
-    def __init__(
-        self,
-        # submodule_1: CT.ExampleSubmodule = None,
-        # submodule_2: CT.ExampleSubmodule = None
-    ):
-        super().__init__()
-
-        # submodules
-        # TODO add submodules here
-        # self.example_submodule_1 = exmaple_submodule_1
-        # self.example_submodule_2 = exmaple_submodule_2
+    # def __init__(self):
+    #     super().__init__()
 
     def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
-        # TODO implement preprocessing pipeline
-        # x = network_input
-        # if self.example_submodule_1 is not None:
-        #     x = self.example_submodule_2(x)
-        # if self.example_submodule_2 is not None:
-        #     x = self.example_submodule_2(x)
-        # return x
-        raise NotImplementedError()
+        # for consistency with the other preprocessors
+        self.intermediate_results["pointcloud_colors"] = sample.points_color
+
+        return sample.points
 
 
 # other preprocessors for other datasets or with completely different preprocessing pipelines ...

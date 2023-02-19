@@ -4,6 +4,8 @@ execute a singe transformation step.
 They might also be used directly in a Compose to make a descriptive pipeline.
 """
 
+from typing import Tuple
+
 import numpy as np
 from nptyping import NDArray, Shape, Float, Int
 
@@ -14,7 +16,7 @@ class OrigDepth2Points:
         depth: NDArray[Shape["H, W"], Float],
         K: NDArray[Shape["3, 3"], Float],
         rgb: NDArray[Shape["H, W, 3"], Int] = None,
-    ) -> NDArray[Shape["N,3"], Float]:
+    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
         mask = np.where(depth > 0)
         x, y = mask[1], mask[0]
 
@@ -38,10 +40,17 @@ class ZClipper:
         self.z_range = z_range
 
     def __call__(
-        self, pointcloud: NDArray[Shape["N,3"], Float]
-    ) -> NDArray[Shape["N,3"], Float]:
+        self,
+        pointcloud: NDArray[Shape["N,3"], Float],
+        pointcloud_colors: NDArray[Shape["N,3"], Int] = None,
+    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
         mask = np.logical_and(
             pointcloud[:, 2] > self.z_range[0], pointcloud[:, 2] < self.z_range[1]
         )
 
-        return pointcloud[mask]
+        pointcloud_filtered = pointcloud[mask]
+        pointcloud_colors_filtered = (
+            pointcloud_colors[mask] if pointcloud_colors is not None else None
+        )
+
+        return pointcloud_filtered, pointcloud_colors_filtered
