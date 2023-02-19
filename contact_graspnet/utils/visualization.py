@@ -85,10 +85,7 @@ def mlab_pose_vis(
     gripper_width: float = 0.08,
     image_path: Path = None,
     image_size: Tuple = (640, 480),
-    show: bool = False,
 ):
-    assert image_path is not None or show is True, "image_path or show must be set"
-
     orig_vis.visualize_grasps(
         full_pc=pointcloud,
         pred_grasps_cam={
@@ -101,11 +98,11 @@ def mlab_pose_vis(
         gripper_width=gripper_width,
     )
 
-    # if image_path is not None:
-    #     mlab.savefig(str(image_path), size=image_size)
-
-    if show:
+    if image_path is None:
         mlab.show()
+    else:
+        mlab.savefig(str(image_path), size=image_size)
+        mlab.close()
 
 
 def overview_fig(

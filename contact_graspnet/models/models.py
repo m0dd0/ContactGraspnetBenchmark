@@ -1,6 +1,7 @@
 """ This module contains the network architecture(s) of the project."""
 
 from typing import Tuple
+from pathlib import Path
 
 import tensorflow.compat.v1 as tf
 from nptyping import NDArray, Shape, Float, Int
@@ -15,8 +16,11 @@ from contact_graspnet.orig.contact_graspnet.contact_grasp_estimator import (
 
 
 class ContactGraspnet(BaseModel):
-    def __init__(self, config_path, checkpoint_dir, batch_size=1):
+    def __init__(self, config_path: Path, checkpoint_dir: Path, batch_size=1):
         super().__init__()
+
+        config_path = Path(config_path).expanduser()
+        checkpoint_dir = Path(checkpoint_dir).expanduser()
 
         # TODO recator grasp estimator
 
