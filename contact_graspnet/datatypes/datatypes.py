@@ -47,10 +47,9 @@ class ResultBase(ABC):
 
 
 @dataclass
-class SomeResult(ResultBase):
-    attr1: ...
-    attr2: ...
-    attr3: ...
+class GraspImg(ResultBase):
+    score: float
+    pos: NDArray[Shape["3"], Float]
+    orientation: NDArray[Shape["3, 3"], Float]
+    contact_point: NDArray[Shape["3"], Float]
 
-
-# ... dataclasses for other results here
