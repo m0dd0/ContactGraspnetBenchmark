@@ -70,9 +70,11 @@ class ContactGraspnet(BaseModel):
         assert len(pred_grasps_cam) == 1
         assert len(scores) == 1
         assert len(contact_pts) == 1
+        assert len(gripper_openings) == 1
 
         pred_grasps_cam = pred_grasps_cam[-1]
         scores = scores[-1]
         contact_pts = contact_pts[-1]
+        gripper_openings = gripper_openings[-1]
 
         return pred_grasps_cam, scores, contact_pts, gripper_openings

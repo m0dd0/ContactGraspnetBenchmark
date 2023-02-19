@@ -40,7 +40,9 @@ def process_dataset(
         print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
 
         pointcloud = preprocessor(sample)
-        network_output = (pred_grasps_cam, scores, contact_pts) = model(pointcloud)
+        network_output = (pred_grasps_cam, scores, contact_pts, widths) = model(
+            pointcloud
+        )
         grasps_cam = postprocessor(network_output)
 
         all_grasps_vis_path = Path(appdirs.user_cache_dir()) / "all_grasps_temp.png"
