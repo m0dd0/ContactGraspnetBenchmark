@@ -1,5 +1,7 @@
 """ This module contains the network architecture(s) of the project."""
 
+from typing import Tuple
+
 import tensorflow.compat.v1 as tf
 from nptyping import NDArray, Shape, Float, Int
 import yaml
@@ -38,7 +40,14 @@ class ContactGraspnet(BaseModel):
             self._sess, saver, checkpoint_dir, mode="test"
         )
 
-    def __call__(self, pc_full: NDArray[Shape["N, 3"], Float]) -> "Tensor[...]":
+    def __call__(
+        self, pc_full: NDArray[Shape["N, 3"], Float]
+    ) -> Tuple[
+        NDArray[Shape["N,4,4"], Float],
+        NDArray[Shape["N"], Float],
+        NDArray[Shape["N, 3"], Float],
+    ]:
+        # we never do segmentation/local regions in this model, this should be done in the preprocessing
         (
             pred_grasps_cam,
             scores,
@@ -52,5 +61,13 @@ class ContactGraspnet(BaseModel):
             # filter_grasps=False,
             # forward_passes=1,
         )
+
+        assert len(pred_grasps_cam) == 1
+        assert len(scores) == 1
+        assert len(contact_pts) == 1
+
+        pred_grasps_cam = pred_grasps_cam[-1]
+        scores = scores[-1]
+        contact_pts = contact_pts[-1]
 
         return pred_grasps_cam, scores, contact_pts
