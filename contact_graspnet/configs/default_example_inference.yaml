@@ -1,5 +1,5 @@
 model:
-  class: "contact_graspnet.models.ContacGraspnet"
+  class: "contact_graspnet.models.ContactGraspnet"
   config_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/checkpoints/scene_test_2048_bs3_hor_sigma_001/config.yaml"
   checkpoint_dir: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/checkpoints/scene_test_2048_bs3_hor_sigma_001"
 
