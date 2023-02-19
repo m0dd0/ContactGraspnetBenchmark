@@ -7,9 +7,7 @@ import json
 from dataclasses import is_dataclass, asdict
 
 import numpy as np
-import torch
 from PIL import Image
-from torchvision.transforms import functional as F
 from matplotlib.figure import Figure
 
 
@@ -18,12 +16,11 @@ from matplotlib.figure import Figure
 
 class ExtendedJsonEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, torch.Tensor):
-            # assert torch.numel(o) <= MAX_JSON_EXPORT_ELEMENTS
-            return o.tolist()
-        elif isinstance(o, np.ndarray):
+        if isinstance(o, np.ndarray):
             # assert o.size <= MAX_JSON_EXPORT_ELEMENTS
             return o.tolist()
+        if isinstance(o, np.float32):
+            return float(o)
         elif is_dataclass(o):
             return asdict(o)
         return json.JSONEncoder.default(self, o)
@@ -33,6 +30,7 @@ class Exporter:
     def __init__(
         self,
         export_dir: Path = None,
+        move_path_contents: bool = False,
         convert_tensor_to_image: bool = True,
         max_json_elements: int = 10_000,
         json_encoder: json.JSONEncoder = None,
@@ -40,7 +38,6 @@ class Exporter:
         """Converts data to a saveable format and saves it to disk. The data must be a
         dictionary or a dataclass. The keys of the dictionary or the fields of the
         dataclass must be strings. The values can be any of the following types:
-        - torch.Tensor
         - numpy.ndarray
         - dataclasses.dataclass
         - json serializable types (int, float, str, list, dict, tuple, bool, NoneType)
@@ -71,6 +68,8 @@ class Exporter:
             export_dir = Path(__file__).parent.parent / "results"
         self.export_dir = export_dir
 
+        self.move_path_contents = move_path_contents
+
         self.json_encoder = json_encoder
         if self.json_encoder is None:
             self.json_encoder = ExtendedJsonEncoder
@@ -80,33 +79,9 @@ class Exporter:
 
         self.i = 0
 
-    def _image_convert(self, value):
-        if not (
-            isinstance(value, (torch.Tensor, np.ndarray))
-            and value.ndim == 3
-            and (
-                (value.shape[0] == 3 and value.shape[1] > 20 and value.shape[2] > 20)
-                or (value.shape[0] > 20 and value.shape[1] > 20 and value.shape[2] == 3)
-            )
-        ):
-            return value
-
-        if isinstance(value, torch.Tensor):
-            value = value.numpy()
-
-        # if pil_to_image gets a numpy array it assumes it is in hwc format
-        # chw to hwc
-        if value.shape[0] == 3:
-            value = value.transpose(1, 2, 0)
-
-        # FIXME: this is a hack to get the image to be saved as png
-        value = value.astype(np.uint8)
-        # value = Image.fromarray(value)
-        value = F.to_pil_image(value)
-
-        return value
-
-    def __call__(self, data: Union["Dataclass", Dict[str, Any]], name:str = None) -> Path:
+    def __call__(
+        self, data: Union["Dataclass", Dict[str, Any]], name: str = None
+    ) -> Path:
         if name is None:
             self.i += 1
             name = f"result_{self.i}"
@@ -119,11 +94,8 @@ class Exporter:
 
         json_data = {}
         for key, value in data.items():
-            if isinstance(value, torch.Tensor):
-                value = value.numpy()
-
-            if self.convert_tensor_to_image:
-                value = self._image_convert(value)
+            if isinstance(value, Path) and not self.move_path_contents:
+                value = str(value)
 
             if isinstance(value, np.ndarray) and value.size <= self.max_json_elements:
                 value = value.tolist()
@@ -134,6 +106,8 @@ class Exporter:
                 np.save(sample_path / f"{key}.npy", value)
             elif isinstance(value, Figure):
                 value.savefig(sample_path / f"{key}.png")
+            elif isinstance(value, Path):
+                value.rename(sample_path / key)
             else:
                 json_data[key] = value
 
