@@ -6,6 +6,7 @@ from pathlib import Path
 import tensorflow.compat.v1 as tf
 from nptyping import NDArray, Shape, Float, Int
 import yaml
+import numpy as np
 
 # from .custom_modules import CustomModuleExample
 from .base import BaseModel
@@ -76,5 +77,9 @@ class ContactGraspnet(BaseModel):
         scores = scores[-1]
         contact_pts = contact_pts[-1]
         gripper_openings = gripper_openings[-1]
+
+        # this is bug in the original code: if only one grasps gets predicted, the width output is not a array but a single float
+        if gripper_openings.ndim == 0:
+            gripper_openings = np.array([gripper_openings])
 
         return pred_grasps_cam, scores, contact_pts, gripper_openings
