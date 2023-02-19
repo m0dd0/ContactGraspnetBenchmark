@@ -24,13 +24,12 @@ information etc.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 
 from nptyping import NDArray, Shape, Float
 
 from contact_graspnet.datatypes import ResultBase, GraspImg
-
-# from . import custom_transforms as CT
+from . import custom_transforms as CT
 
 
 class PostprocessorBase(ABC):
@@ -46,13 +45,15 @@ class PostprocessorBase(ABC):
             NDArray[Shape["N"], Float],
             NDArray[Shape["N, 3"], Float],
         ],
-    ) -> ResultBase:
+    ) -> List[ResultBase]:
         pass
 
 
 class Postprocessor(PostprocessorBase):
-    # def __init__(self):
-    #     super().__init__()
+    def __init__(self, top_score_filter: CT.TopScoreFilter):
+        super().__init__()
+
+        self.top_score_filter = top_score_filter
 
     def __call__(
         self,
@@ -61,16 +62,24 @@ class Postprocessor(PostprocessorBase):
             NDArray[Shape["N"], Float],
             NDArray[Shape["N, 3"], Float],
         ],
-    ) -> GraspImg:
-        grasp_img = GraspImg(
-            score=network_output[1],
-            contact_point=network_output[2],
-            pos=network_output[0][:, :3, 3],
-            orientation=network_output[0][:, :3, :3],
-        )
+    ) -> List[GraspImg]:
+        grasps_img = []
+        for pose, score, contact_point in zip(
+            network_output[0], network_output[1], network_output[2]
+        ):
+            grasps_img.append(
+                GraspImg(
+                    score=score,
+                    contact_point=contact_point,
+                    pos=pose[:3, 3],
+                    orientation=pose[:3, :3],
+                )
+            )
 
-        return grasp_img
+        self.intermediate_results["all_grasps"] = grasps_img
 
+        top_grasps = grasps_img
+        if self.top_score_filter is not None:
+            top_grasps = self.top_score_filter(grasps_img)
 
-# ... other postprocessors here which might use SomeResult as input and process it
-# further with more information etc.
+        return top_grasps
