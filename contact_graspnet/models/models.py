@@ -46,14 +46,23 @@ class ContactGraspnet(BaseModel):
         )
 
     def __call__(
-        self, pc_full: NDArray[Shape["N, 3"], Float]
+        self,
+        pc_full: NDArray[Shape["N, 3"], Float],
+        pc_segment: NDArray[Shape["N, 3"], Float] = None,
     ) -> Tuple[
         NDArray[Shape["N,4,4"], Float],
         NDArray[Shape["N"], Float],
         NDArray[Shape["N, 3"], Float],
         NDArray[Shape["N"], Float],
     ]:
-        # we never do segmentation/local regions in this model, this should be done in the preprocessing
+        # the processing of partial segmented pointlcouds is a mess in the original code
+        # therefore we did not put it into the preprocessing pipeline and rather adapted
+        # the model wrapper to handle it
+
+        pc_segments = {-1: pc_segment} if pc_segment is not None else {}
+        local_regions = pc_segment is not None
+        filter_grasps = pc_segment is not None
+
         (
             pred_grasps_cam,
             scores,
@@ -61,10 +70,10 @@ class ContactGraspnet(BaseModel):
             gripper_openings,
         ) = self._grasp_estimator.predict_scene_grasps(
             self._sess,
-            pc_full
-            # pc_segments=pc_segments,
-            # local_regions=False,
-            # filter_grasps=False,
+            pc_full,
+            pc_segments=pc_segments,
+            local_regions=local_regions,
+            filter_grasps=local_regions,
             # forward_passes=1,
         )
 
