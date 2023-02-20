@@ -77,10 +77,16 @@ class ContactGraspnet(BaseModel):
             # forward_passes=1,
         )
 
-        assert len(pred_grasps_cam) == 1
-        assert len(scores) == 1
-        assert len(contact_pts) == 1
-        assert len(gripper_openings) == 1
+        assert (
+            len(pred_grasps_cam)
+            == len(scores)
+            == len(contact_pts)
+            == len(gripper_openings)
+            in (0, 1)
+        )
+
+        if len(pred_grasps_cam) == 0:
+            return np.array([]), np.array([]), np.array([]), np.array([])
 
         pred_grasps_cam = pred_grasps_cam[-1]
         scores = scores[-1]
