@@ -5,9 +5,12 @@ They might also be used directly in a Compose to make a descriptive pipeline.
 """
 
 from typing import Tuple
+from abc import ABC, abstractmethod
 
 import numpy as np
 from nptyping import NDArray, Shape, Float, Int
+
+from contact_graspnet.datatypes import YCBSimulationDataSample
 
 
 class OrigDepth2Points:
@@ -54,3 +57,53 @@ class ZClipper:
         )
 
         return pointcloud_filtered, pointcloud_colors_filtered
+
+
+class YCBSegmenter(ABC):
+    @abstractmethod
+    def __call__(
+        self, sample: YCBSimulationDataSample
+    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+        pass
+
+
+class YCBDataSegmenter(YCBSegmenter):
+    def __call__(
+        self, sample: YCBSimulationDataSample
+    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+        return sample.points_segmented, sample.points_segmented_color
+
+
+class YCBDepthBoxSegmenter(YCBSegmenter):
+    def __init__(self, depth2pc_converter: OrigDepth2Points = None, margin: int = 0):
+        self.depth2pc_converter = depth2pc_converter or OrigDepth2Points()
+
+        self.margin = margin
+
+    def _bounding_box(self, indices, img):
+        borders = np.array(
+            [
+                max(0, indices[:, 0].min() - self.margin),
+                min(img.shape[0], indices[:, 0].max() + self.margin),
+                max(0, indices[:, 1].min() - self.margin),
+                min(img.shape[1], indices[:, 1].max() + self.margin),
+            ]
+        )
+
+        img_box_segmented = img[borders[0] : borders[1], borders[2] : borders[3]]
+
+        return img_box_segmented
+
+    def __call__(
+        self, sample: YCBSimulationDataSample
+    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+        sample_pixels = np.argwhere(sample.segmentation)
+
+        depth_box_segmented = self._bounding_box(sample_pixels, sample.depth)
+        rgb_box_segmented = self._bounding_box(sample_pixels, sample.rgb)
+
+        points_box_segmented, points_color_box_segmented = self.depth2pc_converter(
+            depth_box_segmented, sample.cam_intrinsics, rgb_box_segmented
+        )
+
+        return points_box_segmented, points_color_box_segmented

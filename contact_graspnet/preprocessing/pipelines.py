@@ -65,15 +65,26 @@ class OrigExampleDataPreprocessor(PreprocessorBase):
         return pointcloud
 
 
-class YCBSimulationDataPreprocessor(PreprocessorBase):
-    # def __init__(self):
-    #     super().__init__()
+class YCBSimulationPreprocessor(PreprocessorBase):
+    def __init__(self, z_clipper: CT.ZClipper, segmenter: CT.YCBSegmenter = None):
+        super().__init__()
+
+        self.z_clipper = z_clipper
+        self.segmenter = segmenter
 
     def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
-        # for consistency with the other preprocessors
-        self.intermediate_results["pointcloud_colors"] = sample.points_color
+        points = sample.points
+        points_color = sample.points_color
 
-        return sample.points
+        if self.segmenter is not None:
+            points, points_color = self.segmenter(sample)
+
+        if self.z_clipper is not None:
+            points, points_color = self.z_clipper(sample.points, sample.points_color)
+
+        self.intermediate_results["pointcloud_colors"] = points_color
+
+        return points
 
 
 # other preprocessors for other datasets or with completely different preprocessing pipelines ...
