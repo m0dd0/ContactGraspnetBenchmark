@@ -4,10 +4,12 @@ model:
   checkpoint_dir: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/checkpoints/scene_test_2048_bs3_hor_sigma_001"
 
 preprocessor:
-  class: "contact_graspnet.preprocessing.OrigExampleDataPreprocessor"
-  depth2points_converter: 
-    class: "contact_graspnet.preprocessing.OrigDepth2Points" 
-  z_clipper: 
+  class: "contact_graspnet.preprocessing.UniversalPreprocessor"
+  depth2points_converter:
+    class: "contact_graspnet.preprocessing.Depth2ImgPoints"
+  img2cam_converter:
+    class: "contact_graspnet.preprocessing.Img2CamCoords"
+  z_clipper:
     class: "contact_graspnet.preprocessing.ZClipper"
     z_range: [0.2, 1.8]
 

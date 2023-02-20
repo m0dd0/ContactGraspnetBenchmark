@@ -39,9 +39,9 @@ def process_dataset(
         sample = dataset[i]
         print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
 
-        pointcloud = preprocessor(sample)
+        full_pc, segmented_pc = preprocessor(sample)
         network_output = (pred_grasps_cam, scores, contact_pts, widths) = model(
-            pointcloud
+            full_pc, segmented_pc
         )
         grasps_cam = postprocessor(network_output)
 
@@ -49,14 +49,14 @@ def process_dataset(
         best_grasp_vis_path = Path(appdirs.user_cache_dir()) / "best_grasp_temp.png"
         if visualize:
             mlab_pose_vis(
-                pointcloud,
+                full_pc,
                 grasps_cam,
                 preprocessor.intermediate_results["pointcloud_colors"],
                 image_path=all_grasps_vis_path,
             )
 
             mlab_pose_vis(
-                pointcloud,
+                full_pc,
                 [sorted(grasps_cam, key=lambda g: g.score, reverse=True)[0]]
                 if len(grasps_cam) > 0
                 else [],
@@ -73,6 +73,8 @@ def process_dataset(
             "sample_rgb": Image.fromarray(sample.rgb),
             "sample_depth": sample.depth,
             "sample_intrinsics": sample.cam_intrinsics,
+            "full_pc": full_pc,
+            "segmented_pc": segmented_pc,
         }
 
         exporter(export_data, sample.name)
@@ -88,12 +90,9 @@ if __name__ == "__main__":
 
     process_dataset(
         dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_1"),
-        result_path=get_root_dir()
-        / "data"
-        / "results"
-        / "ycb_sim_data_1_box_segmented",
-        config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
-        visualize=True,
+        result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_1",
+        config_path=get_root_dir() / "configs" / "default_inference.yaml",
+        visualize=False,
     )
 
     # process_dataset(
