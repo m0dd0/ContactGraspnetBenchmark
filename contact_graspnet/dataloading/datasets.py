@@ -61,7 +61,10 @@ class YCBSimulationData:
             depth=simulation_data["depth_img"],
             points=simulation_data["point_cloud"][0],
             points_color=(simulation_data["point_cloud"][1] * 255).astype(np.uint8),
-            points_segmented=simulation_data["point_cloud_seg"],
+            points_segmented=simulation_data["point_cloud_seg"][0],
+            points_segmented_color=(simulation_data["point_cloud_seg"][1] * 255).astype(
+                np.uint8
+            ),
             segmentation=simulation_data["seg_img"].astype("uint8"),
             cam_intrinsics=simulation_data["cam_intrinsics"],
             cam_pos=simulation_data["cam_pos"],
