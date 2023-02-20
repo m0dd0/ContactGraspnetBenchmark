@@ -5,12 +5,32 @@ They might also be used directly in a Compose to make a descriptive pipeline.
 """
 
 from typing import Tuple
-from abc import ABC, abstractmethod
 
 import numpy as np
-from nptyping import NDArray, Shape, Float, Int, Bool
+from nptyping import NDArray, Shape, Float, Int
 
-from contact_graspnet.datatypes import YCBSimulationDataSample
+
+class Depth2ImgPoints:
+    def __call__(
+        self,
+        depth_img: NDArray[Shape["H, W"], Float],
+        rgb_img: NDArray[Shape["H, W, 3"], Float] = None,
+        segmentation: NDArray[Shape["H, W"], Int] = None,
+    ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["N,3"], Float]]:
+        if segmentation is None:
+            segmentation = np.ones_like(depth_img, dtype=bool)
+
+        indices = np.argwhere(segmentation)
+
+        img_coords = np.vstack(
+            (indices[:, 0], indices[:, 1], depth_img[indices[:, 0], indices[:, 1]])
+        ).T
+
+        colors = None
+        if rgb_img is not None:
+            colors = rgb_img[indices[:, 0], indices[:, 1]]
+
+        return img_coords, colors
 
 
 class Img2CamCoords:
@@ -35,31 +55,6 @@ class Img2CamCoords:
         return cam_points
 
 
-# class OrigDepth2Points:
-#     def __call__(
-#         self,
-#         depth: NDArray[Shape["H, W"], Float],
-#         K: NDArray[Shape["3, 3"], Float],
-#         rgb: NDArray[Shape["H, W, 3"], Int] = None,
-#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
-#         mask = np.where(depth > 0)
-#         x, y = mask[1], mask[0]  # x indices, y indices
-
-#         normalized_x = x.astype(np.float32) - K[0, 2]
-#         normalized_y = y.astype(np.float32) - K[1, 2]
-
-#         world_x = normalized_x * depth[y, x] / K[0, 0]
-#         world_y = normalized_y * depth[y, x] / K[1, 1]
-#         world_z = depth[y, x]
-
-#         pc = np.vstack((world_x, world_y, world_z)).T
-
-#         if rgb is not None:
-#             rgb = rgb[y, x, :]
-
-#         return (pc, rgb)
-
-
 class ZClipper:
     def __init__(self, z_range: NDArray[Shape["2"], Float]):
         self.z_range = z_range
@@ -68,7 +63,7 @@ class ZClipper:
         self,
         pointcloud: NDArray[Shape["N,3"], Float],
         pointcloud_colors: NDArray[Shape["N,3"], Int] = None,
-    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+    ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["N,3"], Int]]:
         mask = np.logical_and(
             pointcloud[:, 2] > self.z_range[0], pointcloud[:, 2] < self.z_range[1]
         )
@@ -79,32 +74,6 @@ class ZClipper:
         )
 
         return pointcloud_filtered, pointcloud_colors_filtered
-
-
-class SegmenterPixel:
-    def __init__(self, seg_id: int = None):
-        self.seg_id = seg_id
-
-    def __call__(
-        self,
-        segmentation: NDArray[Shape["H, W"], Bool],
-        depth_img: NDArray[Shape["H, W"], Int],
-        rgb_img: NDArray[Shape["H, W, 3"], Int] = None,
-    ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["N,3"], Int]]:
-        if self.seg_id is not None:
-            segmentation = segmentation == self.seg_id
-
-        indices = np.argwhere(segmentation)
-
-        img_coords = np.vstack(
-            (indices[:, 0], indices[:, 1], depth_img[indices[:, 0], indices[:, 1]])
-        ).T
-
-        colors = None
-        if rgb_img is not None:
-            colors = rgb_img[indices[:, 0], indices[:, 1]]
-
-        return img_coords, colors
 
 
 # class SegmentationBoundingBoxer:
@@ -185,3 +154,54 @@ class SegmenterPixel:
 #         )
 
 #         return points_box_segmented, points_color_box_segmented
+
+
+# class OrigDepth2Points:
+#     def __call__(
+#         self,
+#         depth: NDArray[Shape["H, W"], Float],
+#         K: NDArray[Shape["3, 3"], Float],
+#         rgb: NDArray[Shape["H, W, 3"], Int] = None,
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         mask = np.where(depth > 0)
+#         x, y = mask[1], mask[0]  # x indices, y indices
+
+#         normalized_x = x.astype(np.float32) - K[0, 2]
+#         normalized_y = y.astype(np.float32) - K[1, 2]
+
+#         world_x = normalized_x * depth[y, x] / K[0, 0]
+#         world_y = normalized_y * depth[y, x] / K[1, 1]
+#         world_z = depth[y, x]
+
+#         pc = np.vstack((world_x, world_y, world_z)).T
+
+#         if rgb is not None:
+#             rgb = rgb[y, x, :]
+
+#         return (pc, rgb)
+
+
+# class SegmenterPixel:
+#     def __init__(self, seg_id: int = None):
+#         self.seg_id = seg_id
+
+#     def __call__(
+#         self,
+#         segmentation: NDArray[Shape["H, W"], Bool],
+#         depth_img: NDArray[Shape["H, W"], Int],
+#         rgb_img: NDArray[Shape["H, W, 3"], Int] = None,
+#     ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["N,3"], Int]]:
+#         if self.seg_id is not None:
+#             segmentation = segmentation == self.seg_id
+
+#         indices = np.argwhere(segmentation)
+
+#         img_coords = np.vstack(
+#             (indices[:, 0], indices[:, 1], depth_img[indices[:, 0], indices[:, 1]])
+#         ).T
+
+#         colors = None
+#         if rgb_img is not None:
+#             colors = rgb_img[indices[:, 0], indices[:, 1]]
+
+#         return img_coords, colors

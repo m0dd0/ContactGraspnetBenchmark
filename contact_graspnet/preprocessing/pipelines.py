@@ -20,9 +20,10 @@ of the subpipeline yourself.
 """
 
 from abc import abstractmethod, ABC
-from typing import Any, Dict
+from typing import Any, Dict, Union, Tuple
 
-from nptyping import NDArray, Shape, Float, Int
+from nptyping import NDArray, Shape, Float
+import numpy as np
 
 from contact_graspnet.datatypes import (
     DatasetSample,
@@ -42,32 +43,48 @@ class PreprocessorBase(ABC):
         pass
 
 
-class OrigExampleDataPreprocessor(PreprocessorBase):
+class UniversalPreprocessor(PreprocessorBase):
     def __init__(
         self,
-        segmenter: CT.SegmenterPixel,
-        # depth2points_converter: CT.OrigDepth2Points,
+        depth2points_converter: CT.Depth2ImgPoints,
         img2cam_converter: CT.Img2CamCoords,
         z_clipper: CT.ZClipper,
     ):
         super().__init__()
 
-        self.segmenter = segmenter
+        self.depth2points_converter = depth2points_converter
         self.img2cam_converter = img2cam_converter
         self.z_clipper = z_clipper
 
-    def __call__(self, sample: OrigExampleDataSample) -> NDArray[Shape["N,3"], Float]:
-        points_img, points_colors = self.segmenter(
-            sample.segmentation, sample.depth, sample.rgb
+    def __call__(
+        self,
+        sample: Union[OrigExampleDataSample, YCBSimulationDataSample],
+        seg_id: int = None,
+    ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["M,3"], Float]]:
+        segmentation = sample.segmentation
+        if seg_id is not None:
+            segmentation = segmentation == seg_id
+
+        assert (
+            len(np.unique(segmentation)) == 2
+        ), "Segmentation should only contain two classes or segmentation id needs to be specified."
+
+        full_pc, full_pc_colors = self.depth2points_converter(sample.depth, sample.rgb)
+        full_pc = self.img2cam_converter(full_pc, sample.cam_intrinsics)
+        full_pc, full_pc_colors = self.z_clipper(full_pc, full_pc_colors)
+
+        segmented_pc, segmented_pc_colors = self.depth2points_converter(
+            sample.depth, sample.rgb, segmentation
+        )
+        segmented_pc = self.img2cam_converter(segmented_pc, sample.cam_intrinsics)
+        segmented_pc, segmented_pc_colors = self.z_clipper(
+            segmented_pc, segmented_pc_colors
         )
 
-        points_cam = self.img2cam_converter(points_img, sample.cam_intrinsics)
+        self.intermediate_results["full_pc_colors"] = full_pc_colors
+        self.intermediate_results["segmented_pc_colors"] = segmented_pc_colors
 
-        points, points_colors = self.z_clipper(points_cam, points_colors)
-
-        self.intermediate_results["pointcloud_colors"] = points_colors
-
-        return points
+        return full_pc, segmented_pc
 
 
 # class YCBSimulationPreprocessor(PreprocessorBase):
