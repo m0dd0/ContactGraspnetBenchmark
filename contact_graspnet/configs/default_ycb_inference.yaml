@@ -4,7 +4,15 @@ model:
   checkpoint_dir: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/checkpoints/scene_test_2048_bs3_hor_sigma_001"
 
 preprocessor:
-  class: "contact_graspnet.preprocessing.YCBSimulationDataPreprocessor"
+  class: "contact_graspnet.preprocessing.YCBSimulationPreprocessor"
+  z_clipper:
+    class: "contact_graspnet.preprocessing.ZClipper"
+    z_range: [0.2, 1.8]
+  segmenter:
+    class: "contact_graspnet.preprocessing.YCBDepthBoxSegmenter"
+    depth2pc_converter: 
+      class: "contact_graspnet.preprocessing.OrigDepth2Points"
+    margin: 30
 
 postprocessor:
   class: "contact_graspnet.postprocessing.Postprocessor"

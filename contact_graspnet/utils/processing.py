@@ -88,7 +88,17 @@ if __name__ == "__main__":
 
     process_dataset(
         dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_1"),
-        result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_1",
+        result_path=get_root_dir()
+        / "data"
+        / "results"
+        / "ycb_sim_data_1_box_segmented",
         config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
         visualize=True,
     )
+
+    # process_dataset(
+    #     dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_2"),
+    #     result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_2",
+    #     config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
+    #     visualize=True,
+    # )
