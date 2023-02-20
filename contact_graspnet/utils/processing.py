@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 
 import yaml
 from PIL import Image
@@ -20,7 +20,8 @@ def process_dataset(
     dataset: Union[OrigExampleData, YCBSimulationData],
     result_path: Path,
     config_path: Path,
-    visualize: bool = False,
+    skip_obj_ids: List[int] = None,
+    segmentation_id: int = None,
 ):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -28,76 +29,64 @@ def process_dataset(
     preprocessor = module_from_config(config["preprocessor"])
     model = module_from_config(config["model"])
     postprocessor = module_from_config(config["postprocessor"])
-    exporter = Exporter(export_dir=result_path, move_path_contents=True)
+    exporter = Exporter(
+        export_dir=result_path, move_path_contents=True, max_json_elements=1000
+    )
 
     config["processed_datset"] = str(dataset.root_dir)
+    config["skip_obj_ids"] = skip_obj_ids
     result_path.mkdir(parents=True, exist_ok=True)
     with open(result_path / "inference_config.yaml", "w") as f:
         yaml.dump(config, f)
 
     for i in range(len(dataset)):
+        if skip_obj_ids is not None and i in skip_obj_ids:
+            print(f"Skipping sample {i}... ({i+1}/{len(dataset)})")
+            continue
+
         sample = dataset[i]
         print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
 
-        full_pc, segmented_pc = preprocessor(sample)
+        full_pc, segmented_pc = preprocessor(sample, segmentation_id)
         network_output = (pred_grasps_cam, scores, contact_pts, widths) = model(
             full_pc, segmented_pc
         )
         grasps_cam = postprocessor(network_output)
 
-        all_grasps_vis_path = Path(appdirs.user_cache_dir()) / "all_grasps_temp.png"
-        best_grasp_vis_path = Path(appdirs.user_cache_dir()) / "best_grasp_temp.png"
-        if visualize:
-            mlab_pose_vis(
-                full_pc,
-                grasps_cam,
-                preprocessor.intermediate_results["pointcloud_colors"],
-                image_path=all_grasps_vis_path,
-            )
-
-            mlab_pose_vis(
-                full_pc,
-                [sorted(grasps_cam, key=lambda g: g.score, reverse=True)[0]]
-                if len(grasps_cam) > 0
-                else [],
-                preprocessor.intermediate_results["pointcloud_colors"],
-                image_path=best_grasp_vis_path,
-            )
-
         export_data = {
-            "all_grasps.png": all_grasps_vis_path if visualize else None,
-            "best_grasp.png": best_grasp_vis_path if visualize else None,
             "grasps_cam": grasps_cam,
-            # we also export the sample data
-            "sample_segmentation": sample.segmentation,
+            # "sample_segmentation": sample.segmentation,
             "sample_rgb": Image.fromarray(sample.rgb),
-            "sample_depth": sample.depth,
-            "sample_intrinsics": sample.cam_intrinsics,
+            # "sample_depth": sample.depth,
+            # "sample_intrinsics": sample.cam_intrinsics,
             "full_pc": full_pc,
+            "full_pc_colors": preprocessor.intermediate_results["full_pc_colors"],
             "segmented_pc": segmented_pc,
+            "segmented_pc_colors": preprocessor.intermediate_results[
+                "segmented_pc_colors"
+            ],
         }
 
         exporter(export_data, sample.name)
 
 
 if __name__ == "__main__":
-    # process_dataset(
-    #     dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
-    #     result_path=get_root_dir() / "data" / "results" / "orig_test_data",
-    #     config_path=get_root_dir() / "configs" / "default_example_inference.yaml",
-    #     visualize=True,
-    # )
-
+    segmentation_id = 2.0
     process_dataset(
-        dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_1"),
-        result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_1",
+        dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
+        result_path=get_root_dir()
+        / "data"
+        / "results"
+        / f"orig_test_data_seg{int(segmentation_id)}",
         config_path=get_root_dir() / "configs" / "default_inference.yaml",
-        visualize=False,
+        segmentation_id=segmentation_id,
     )
 
+    # skip_obj_ids = [17, 18, 19, 22, 23, 34, 36, 50, 51, 52, 74]
+    # i = 1
     # process_dataset(
-    #     dataset=YCBSimulationData(Path.home() / "Documents" / "ycb_sim_data_2"),
-    #     result_path=get_root_dir() / "data" / "results" / "ycb_sim_data_2",
-    #     config_path=get_root_dir() / "configs" / "default_ycb_inference.yaml",
-    #     visualize=True,
+    #     dataset=YCBSimulationData(Path.home() / "Documents" / f"ycb_sim_data_{i}"),
+    #     result_path=get_root_dir() / "data" / "results" / f"ycb_sim_data_{i}",
+    #     config_path=get_root_dir() / "configs" / "default_inference.yaml",
+    #     skip_obj_ids=skip_obj_ids,
     # )
