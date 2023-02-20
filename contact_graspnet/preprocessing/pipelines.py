@@ -45,46 +45,51 @@ class PreprocessorBase(ABC):
 class OrigExampleDataPreprocessor(PreprocessorBase):
     def __init__(
         self,
-        depth2points_converter: CT.OrigDepth2Points,
+        segmenter: CT.SegmenterPixel,
+        # depth2points_converter: CT.OrigDepth2Points,
+        img2cam_converter: CT.Img2CamCoords,
         z_clipper: CT.ZClipper,
     ):
         super().__init__()
 
-        self.depth2points_converter = depth2points_converter
+        self.segmenter = segmenter
+        self.img2cam_converter = img2cam_converter
         self.z_clipper = z_clipper
 
     def __call__(self, sample: OrigExampleDataSample) -> NDArray[Shape["N,3"], Float]:
-        pointcloud, pointcloud_colors = self.depth2points_converter(
-            sample.depth, sample.cam_intrinsics, sample.rgb
+        points_img, points_colors = self.segmenter(
+            sample.segmentation, sample.depth, sample.rgb
         )
 
-        pointcloud, pointcloud_colors = self.z_clipper(pointcloud, pointcloud_colors)
+        points_cam = self.img2cam_converter(points_img, sample.cam_intrinsics)
 
-        self.intermediate_results["pointcloud_colors"] = pointcloud_colors
+        points, points_colors = self.z_clipper(points_cam, points_colors)
 
-        return pointcloud
-
-
-class YCBSimulationPreprocessor(PreprocessorBase):
-    def __init__(self, z_clipper: CT.ZClipper, segmenter: CT.YCBSegmenter = None):
-        super().__init__()
-
-        self.z_clipper = z_clipper
-        self.segmenter = segmenter
-
-    def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
-        points = sample.points
-        points_color = sample.points_color
-
-        if self.segmenter is not None:
-            points, points_color = self.segmenter(sample)
-
-        if self.z_clipper is not None:
-            points, points_color = self.z_clipper(sample.points, sample.points_color)
-
-        self.intermediate_results["pointcloud_colors"] = points_color
+        self.intermediate_results["pointcloud_colors"] = points_colors
 
         return points
+
+
+# class YCBSimulationPreprocessor(PreprocessorBase):
+#     def __init__(self, z_clipper: CT.ZClipper, segmenter: CT.YCBSegmenter = None):
+#         super().__init__()
+
+#         self.z_clipper = z_clipper
+#         self.segmenter = segmenter
+
+#     def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
+#         points = sample.points
+#         points_color = sample.points_color
+
+#         if self.segmenter is not None:
+#             points, points_color = self.segmenter(sample)
+
+#         if self.z_clipper is not None:
+#             points, points_color = self.z_clipper(points, points_color)
+
+#         self.intermediate_results["pointcloud_colors"] = points_color
+
+#         return points
 
 
 # other preprocessors for other datasets or with completely different preprocessing pipelines ...

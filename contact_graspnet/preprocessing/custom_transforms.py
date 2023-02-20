@@ -8,34 +8,56 @@ from typing import Tuple
 from abc import ABC, abstractmethod
 
 import numpy as np
-from nptyping import NDArray, Shape, Float, Int
+from nptyping import NDArray, Shape, Float, Int, Bool
 
 from contact_graspnet.datatypes import YCBSimulationDataSample
 
 
-class OrigDepth2Points:
+class Img2CamCoords:
+    # def __init__(self):
+    #     pass
+
     def __call__(
         self,
-        depth: NDArray[Shape["H, W"], Float],
+        img_points: NDArray[Shape["N,3"], Float],
         K: NDArray[Shape["3, 3"], Float],
-        rgb: NDArray[Shape["H, W, 3"], Int] = None,
-    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
-        mask = np.where(depth > 0)
-        x, y = mask[1], mask[0]
+    ) -> NDArray[Shape["N,3"], Float]:
+        cx = K[0, 2]
+        cy = K[1, 2]
+        fx = K[0, 0]
+        fy = K[1, 1]
 
-        normalized_x = x.astype(np.float32) - K[0, 2]
-        normalized_y = y.astype(np.float32) - K[1, 2]
+        p_cam_x = ((img_points[:, 0] - cx) * img_points[:, 2] / fx).flatten()
+        p_cam_y = ((img_points[:, 1] - cy) * img_points[:, 2] / fy).flatten()
 
-        world_x = normalized_x * depth[y, x] / K[0, 0]
-        world_y = normalized_y * depth[y, x] / K[1, 1]
-        world_z = depth[y, x]
+        cam_points = np.vstack((p_cam_x, p_cam_y, img_points[:, 2])).T
 
-        pc = np.vstack((world_x, world_y, world_z)).T
+        return cam_points
 
-        if rgb is not None:
-            rgb = rgb[y, x, :]
 
-        return (pc, rgb)
+# class OrigDepth2Points:
+#     def __call__(
+#         self,
+#         depth: NDArray[Shape["H, W"], Float],
+#         K: NDArray[Shape["3, 3"], Float],
+#         rgb: NDArray[Shape["H, W, 3"], Int] = None,
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         mask = np.where(depth > 0)
+#         x, y = mask[1], mask[0]  # x indices, y indices
+
+#         normalized_x = x.astype(np.float32) - K[0, 2]
+#         normalized_y = y.astype(np.float32) - K[1, 2]
+
+#         world_x = normalized_x * depth[y, x] / K[0, 0]
+#         world_y = normalized_y * depth[y, x] / K[1, 1]
+#         world_z = depth[y, x]
+
+#         pc = np.vstack((world_x, world_y, world_z)).T
+
+#         if rgb is not None:
+#             rgb = rgb[y, x, :]
+
+#         return (pc, rgb)
 
 
 class ZClipper:
@@ -59,51 +81,107 @@ class ZClipper:
         return pointcloud_filtered, pointcloud_colors_filtered
 
 
-class YCBSegmenter(ABC):
-    @abstractmethod
-    def __call__(
-        self, sample: YCBSimulationDataSample
-    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
-        pass
-
-
-class YCBDataSegmenter(YCBSegmenter):
-    def __call__(
-        self, sample: YCBSimulationDataSample
-    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
-        return sample.points_segmented, sample.points_segmented_color
-
-
-class YCBDepthBoxSegmenter(YCBSegmenter):
-    def __init__(self, depth2pc_converter: OrigDepth2Points = None, margin: int = 0):
-        self.depth2pc_converter = depth2pc_converter or OrigDepth2Points()
-
-        self.margin = margin
-
-    def _bounding_box(self, indices, img):
-        borders = np.array(
-            [
-                max(0, indices[:, 0].min() - self.margin),
-                min(img.shape[0], indices[:, 0].max() + self.margin),
-                max(0, indices[:, 1].min() - self.margin),
-                min(img.shape[1], indices[:, 1].max() + self.margin),
-            ]
-        )
-
-        img_box_segmented = img[borders[0] : borders[1], borders[2] : borders[3]]
-
-        return img_box_segmented
+class SegmenterPixel:
+    def __init__(self, seg_id: int = None):
+        self.seg_id = seg_id
 
     def __call__(
-        self, sample: YCBSimulationDataSample
-    ) -> Tuple[NDArray[Shape["N,3"], Float]]:
-        sample_pixels = np.argwhere(sample.segmentation)
+        self,
+        segmentation: NDArray[Shape["H, W"], Bool],
+        depth_img: NDArray[Shape["H, W"], Int],
+        rgb_img: NDArray[Shape["H, W, 3"], Int] = None,
+    ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["N,3"], Int]]:
+        if self.seg_id is not None:
+            segmentation = segmentation == self.seg_id
 
-        depth_box_segmented = self._bounding_box(sample_pixels, sample.depth)
-        rgb_box_segmented = self._bounding_box(sample_pixels, sample.rgb)
+        indices = np.argwhere(segmentation)
 
-        points_box_segmented, points_color_box_segmented = self.depth2pc_converter(
-            depth_box_segmented, sample.cam_intrinsics, rgb_box_segmented
-        )
+        img_coords = np.vstack(
+            (indices[:, 0], indices[:, 1], depth_img[indices[:, 0], indices[:, 1]])
+        ).T
 
-        return points_box_segmented, points_color_box_segmented
+        colors = None
+        if rgb_img is not None:
+            colors = rgb_img[indices[:, 0], indices[:, 1]]
+
+        return img_coords, colors
+
+
+# class SegmentationBoundingBoxer:
+#     def __init__(self, margin: int = 0, seg_id: int = None):
+#         self.margin = margin
+
+#         self.seg_id = seg_id
+
+#     def __call__(
+#         self,
+#         segmentation: NDArray[Shape["H, W"], Bool],
+#         img: NDArray[Shape["H, W, 3"], Int] = None,
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         if self.seg_id is not None:
+#             segmentation = segmentation == self.seg_id
+
+#         indices = np.argwhere(segmentation)
+
+#         borders = np.array(
+#             [
+#                 max(0, indices[:, 0].min() - self.margin),
+#                 min(img.shape[0], indices[:, 0].max() + self.margin),
+#                 max(0, indices[:, 1].min() - self.margin),
+#                 min(img.shape[1], indices[:, 1].max() + self.margin),
+#             ]
+#         )
+
+#         img_box_segmented = img[borders[0] : borders[1], borders[2] : borders[3]]
+
+#         return img_box_segmented
+
+
+# class YCBSegmenter(ABC):
+#     @abstractmethod
+#     def __call__(
+#         self, sample: YCBSimulationDataSample
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         pass
+
+
+# class YCBDataSegmenter(YCBSegmenter):
+#     def __call__(
+#         self, sample: YCBSimulationDataSample
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         return sample.points_segmented, sample.points_segmented_color
+
+
+# class YCBDepthBoxSegmenter(YCBSegmenter):
+#     def __init__(self, depth2pc_converter: OrigDepth2Points = None, margin: int = 0):
+#         self.depth2pc_converter = depth2pc_converter or OrigDepth2Points()
+
+#         self.margin = margin
+
+#     def _bounding_box(self, indices, img):
+#         borders = np.array(
+#             [
+#                 max(0, indices[:, 0].min() - self.margin),
+#                 min(img.shape[0], indices[:, 0].max() + self.margin),
+#                 max(0, indices[:, 1].min() - self.margin),
+#                 min(img.shape[1], indices[:, 1].max() + self.margin),
+#             ]
+#         )
+
+#         img_box_segmented = img[borders[0] : borders[1], borders[2] : borders[3]]
+
+#         return img_box_segmented
+
+#     def __call__(
+#         self, sample: YCBSimulationDataSample
+#     ) -> Tuple[NDArray[Shape["N,3"], Float]]:
+#         sample_pixels = np.argwhere(sample.segmentation)
+
+#         depth_box_segmented = self._bounding_box(sample_pixels, sample.depth)
+#         rgb_box_segmented = self._bounding_box(sample_pixels, sample.rgb)
+
+#         points_box_segmented, points_color_box_segmented = self.depth2pc_converter(
+#             depth_box_segmented, sample.cam_intrinsics, rgb_box_segmented
+#         )
+
+#         return points_box_segmented, points_color_box_segmented
