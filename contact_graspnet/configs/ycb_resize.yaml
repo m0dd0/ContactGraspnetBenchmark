@@ -19,9 +19,9 @@ dataset:
     segmentation_binarizer: null
       # class: "contact_graspnet.preprocessing.SegmentationBinarizer"
       # segmentation_id: 1.0
-    resizer:
-      class: "contact_graspnet.preprocessing.Resizer"
-      target_size: [720, 1280]
+    resizer: null
+      # class: "contact_graspnet.preprocessing.Resizer"
+      # target_size: [720, 1280]
 
 postprocessor:
   class: "contact_graspnet.postprocessing.Postprocessor"
@@ -29,5 +29,5 @@ postprocessor:
     # class: "contact_graspnet.postprocessing.TopSoreFilter"
     # top_k: 3 
 
-result_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/results/ycb_resize"
+result_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/results/ycb1_no_resize"
   
