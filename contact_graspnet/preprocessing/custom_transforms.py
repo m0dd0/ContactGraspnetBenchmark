@@ -9,6 +9,7 @@ from copy import deepcopy
 
 import numpy as np
 from nptyping import NDArray, Shape, Float, Int
+import skimage as ski
 
 from contact_graspnet.datatypes import YCBSimulationDataSample, OrigExampleDataSample
 
@@ -88,6 +89,42 @@ class ZClipper:
         )
 
         return pointcloud_filtered, pointcloud_colors_filtered
+
+
+class Resizer:
+    def __init__(self, target_size: Tuple[int, int]):
+        self.target_size = target_size
+
+    def __call__(
+        self,
+        img: Union[NDArray[Shape["H, W, 3"], Float], NDArray[Shape["H, W"], Float]],
+        K: NDArray[Shape["3, 3"], Float] = None,
+    ) -> Tuple[
+        Union[NDArray[Shape["H, W, 3"], Float], NDArray[Shape["H, W"], Float]],
+        NDArray[Shape["3, 3"], Float],
+    ]:
+        if K is not None:
+            assert img.shape[1] == K[0, 2] * 2
+            assert img.shape[0] == K[1, 2] * 2
+
+            K = K.copy()
+            factor_x = (self.target_size[0] / 2) / K[1, 2]
+            factor_y = (self.target_size[1] / 2) / K[0, 2]
+
+            K[0, :] *= factor_x
+            K[1, :] *= factor_y
+
+        return ski.transform.resize(img, self.target_size), K
+
+
+# class IntrinsicsResizer:
+#     def __init__(self, target_size):
+#         self.target_size = target_size
+
+#     def __call__(
+#         self, K: NDArray[Shape["3, 3"], Float]
+#     ) -> NDArray[Shape["3, 3"], Float]:
+#         pass
 
 
 # class SegmentationBoundingBoxer:

@@ -31,6 +31,7 @@ setuptools.setup(
         "npytyping",  # for tf tensors we use string annotations for now
         "appdirs",
         "tabulate",
+        "scikit-image",
     ],
     extras_require={"dev": ["black", "pylint", "jupyter"]},
     include_package_data=True,

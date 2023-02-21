@@ -49,9 +49,11 @@ class UniversalPreprocessor(PreprocessorBase):
         depth2points_converter: CT.Depth2ImgPoints,
         img2cam_converter: CT.Img2CamCoords,
         z_clipper: CT.ZClipper,
+        resizer: CT.Resizer = None,
     ):
         super().__init__()
 
+        self.resizer = resizer or (lambda x, y=None: (x, y))
         self.depth2points_converter = depth2points_converter
         self.img2cam_converter = img2cam_converter
         self.z_clipper = z_clipper
@@ -64,14 +66,18 @@ class UniversalPreprocessor(PreprocessorBase):
             len(np.unique(sample.segmentation)) == 2
         ), "Segmentation should only contain two classes or segmentation id needs to be specified."
 
-        full_pc, full_pc_colors = self.depth2points_converter(sample.depth, sample.rgb)
-        full_pc = self.img2cam_converter(full_pc, sample.cam_intrinsics)
+        depth, intrinsics = self.resizer(sample.depth, sample.cam_intrinsics)
+        rgb, _ = self.resizer(sample.rgb)
+        segmentation, _ = self.resizer(sample.segmentation)
+
+        full_pc, full_pc_colors = self.depth2points_converter(depth, rgb)
+        full_pc = self.img2cam_converter(full_pc, intrinsics)
         full_pc, full_pc_colors = self.z_clipper(full_pc, full_pc_colors)
 
         segmented_pc, segmented_pc_colors = self.depth2points_converter(
-            sample.depth, sample.rgb, sample.segmentation
+            depth, rgb, segmentation
         )
-        segmented_pc = self.img2cam_converter(segmented_pc, sample.cam_intrinsics)
+        segmented_pc = self.img2cam_converter(segmented_pc, intrinsics)
         segmented_pc, segmented_pc_colors = self.z_clipper(
             segmented_pc, segmented_pc_colors
         )
