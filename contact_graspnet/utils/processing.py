@@ -71,22 +71,22 @@ def process_dataset(
 
 
 if __name__ == "__main__":
-    segmentation_id = 2.0
-    process_dataset(
-        dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
-        result_path=get_root_dir()
-        / "data"
-        / "results"
-        / f"orig_test_data_seg{int(segmentation_id)}",
-        config_path=get_root_dir() / "configs" / "default_inference.yaml",
-        segmentation_id=segmentation_id,
-    )
-
-    # skip_obj_ids = [17, 18, 19, 22, 23, 34, 36, 50, 51, 52, 74]
-    # i = 1
+    # segmentation_id = 4.0
     # process_dataset(
-    #     dataset=YCBSimulationData(Path.home() / "Documents" / f"ycb_sim_data_{i}"),
-    #     result_path=get_root_dir() / "data" / "results" / f"ycb_sim_data_{i}",
+    #     dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
+    #     result_path=get_root_dir()
+    #     / "data"
+    #     / "results"
+    #     / f"orig_test_data_seg{int(segmentation_id)}",
     #     config_path=get_root_dir() / "configs" / "default_inference.yaml",
-    #     skip_obj_ids=skip_obj_ids,
+    #     segmentation_id=segmentation_id,
     # )
+
+    skip_obj_ids = [17, 18, 19, 22, 23, 34, 36, 50, 51, 52, 74]
+    i = 3
+    process_dataset(
+        dataset=YCBSimulationData(Path.home() / "Documents" / f"ycb_sim_data_{i}"),
+        result_path=get_root_dir() / "data" / "results" / f"ycb_sim_data_{i}",
+        config_path=get_root_dir() / "configs" / "default_inference.yaml",
+        skip_obj_ids=skip_obj_ids,
+    )
