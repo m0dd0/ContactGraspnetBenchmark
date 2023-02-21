@@ -5,7 +5,7 @@ model:
 
 dataset:
   class: "contact_graspnet.dataloading.OrigExampleData"
-  root_dir: "~/Documents/ContactGraspnet/contact_graspnet/data/raw/orig_test_data"
+  root_dir: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/raw/orig_test_data"
   transform:
     class: "contact_graspnet.preprocessing.UniversalPreprocessor"
     depth2points_converter:
@@ -28,4 +28,4 @@ postprocessor:
     # class: "contact_graspnet.postprocessing.TopSoreFilter"
     # top_k: 3 
 
-result_path: "~/Documents/ContactGraspnet/contact_graspnet/data/results/orig_test_data_seg1"
+result_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/results/orig_test_data_seg1"
