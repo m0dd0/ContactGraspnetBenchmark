@@ -14,16 +14,25 @@ from contact_graspnet.utils.misc import setup_tensorflow
 
 setup_tensorflow()
 
+# class Compose:
+#     def __init__(self, transforms: List):
+#         self.transforms = transforms
+
+#     def __call__(self, sample):
+#         for transform in self.transforms:
+#             sample = transform(sample)
+#         return sample
+
 
 def process_dataset(
-    dataset: Union[OrigExampleData, YCBSimulationData],
+    dataset_path: Union[OrigExampleData, YCBSimulationData],
     result_path: Path,
     config_path: Path,
 ):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    preprocessor = module_from_config(config["preprocessor"])
+    # preprocessor = module_from_config(config["preprocessor"])
     model = module_from_config(config["model"])
     postprocessor = module_from_config(config["postprocessor"])
     exporter = Exporter(
@@ -31,7 +40,6 @@ def process_dataset(
     )
 
     config["processed_datset"] = str(dataset.root_dir)
-    config["skip_obj_ids"] = skip_obj_ids
     result_path.mkdir(parents=True, exist_ok=True)
     with open(result_path / "inference_config.yaml", "w") as f:
         yaml.dump(config, f)

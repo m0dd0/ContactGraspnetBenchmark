@@ -49,26 +49,26 @@ class UniversalPreprocessor(PreprocessorBase):
         depth2points_converter: CT.Depth2ImgPoints,
         img2cam_converter: CT.Img2CamCoords,
         z_clipper: CT.ZClipper,
+        segmentation_binarizer: CT.SegmentationBinarizer = None,
         resizer: CT.Resizer = None,
     ):
         super().__init__()
 
-        self.resizer = resizer or (lambda x, y=None: (x, y))
         self.depth2points_converter = depth2points_converter
         self.img2cam_converter = img2cam_converter
         self.z_clipper = z_clipper
+        self.segmentation_binarizer = segmentation_binarizer or (lambda x: x)
+        self.resizer = resizer or (lambda x, y=None: (x, y))
 
     def __call__(
         self,
         sample: Union[OrigExampleDataSample, YCBSimulationDataSample],
     ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["M,3"], Float]]:
-        assert (
-            len(np.unique(sample.segmentation)) == 2
-        ), "Segmentation should only contain two classes or segmentation id needs to be specified."
-
         depth, intrinsics = self.resizer(sample.depth, sample.cam_intrinsics)
         rgb, _ = self.resizer(sample.rgb)
         segmentation, _ = self.resizer(sample.segmentation)
+
+        segmentation = self.segmentation_binarizer(segmentation)
 
         full_pc, full_pc_colors = self.depth2points_converter(depth, rgb)
         full_pc = self.img2cam_converter(full_pc, intrinsics)
@@ -84,8 +84,23 @@ class UniversalPreprocessor(PreprocessorBase):
 
         self.intermediate_results["full_pc_colors"] = full_pc_colors
         self.intermediate_results["segmented_pc_colors"] = segmented_pc_colors
+        self.intermediate_results["depth"] = depth
+        self.intermediate_results["rgb"] = rgb
+        self.intermediate_results["segmentation"] = segmentation
+        self.intermediate_results["initial_sample"] = sample
 
         return full_pc, segmented_pc
+
+
+# class YCBPreprocessor(UniversalPreprocessor):
+#     def __init__(
+#         self,
+#         depth2points_converter: CT.Depth2ImgPoints,
+#         img2cam_converter: CT.Img2CamCoords,
+#         z_clipper: CT.ZClipper,
+#         resizer: CT.Resizer = None,
+#     ):
+#         super().__init__(depth2points_converter, img2cam_converter, z_clipper, resizer)
 
 
 # class YCBSimulationPreprocessor(PreprocessorBase):

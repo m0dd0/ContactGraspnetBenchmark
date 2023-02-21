@@ -14,15 +14,14 @@ import skimage as ski
 from contact_graspnet.datatypes import YCBSimulationDataSample, OrigExampleDataSample
 
 
-class BinarySegmentationSample:
+class SegmentationBinarizer:
     def __init__(self, segmentation_id: int):
         self.segmentation_id = segmentation_id
 
-    def __call__(self, sample: Union[YCBSimulationDataSample, OrigExampleDataSample]):
-        sample = deepcopy(sample)
-        sample.segmentation = sample.segmentation == self.segmentation_id
-
-        return sample
+    def __call__(
+        self, segmentation: NDArray[Shape["H, W"], Int]
+    ) -> NDArray[Shape["H, W"], Int]:
+        return segmentation == self.segmentation_id
 
 
 class Depth2ImgPoints:
