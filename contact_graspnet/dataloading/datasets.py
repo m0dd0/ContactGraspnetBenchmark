@@ -36,7 +36,7 @@ class YCBSimulationData:
     def __init__(
         self, root_dir: Path, invalid_objs: List[str] = None, transform: Callable = None
     ):
-        self.root_dir = Path(root_dir)
+        self.root_dir = Path(root_dir).expanduser()
         self.transform = transform
 
         self.invalid_objs = invalid_objs
@@ -91,7 +91,7 @@ class YCBSimulationData:
 
 class OrigExampleData:
     def __init__(self, root_dir: Path, transform: Callable = None):
-        self.root_dir = Path(root_dir)
+        self.root_dir = Path(root_dir).expanduser()
         self.transform = transform
 
     def __len__(self):

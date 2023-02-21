@@ -4,8 +4,6 @@ from typing import Union, List
 import yaml
 from PIL import Image
 
-from contact_graspnet.preprocessing import BinarySegmentationSample
-from contact_graspnet.dataloading import OrigExampleData, YCBSimulationData
 from contact_graspnet.utils.export import Exporter
 from contact_graspnet.utils.config import module_from_config
 from contact_graspnet.utils.misc import get_root_dir
@@ -25,30 +23,30 @@ setup_tensorflow()
 
 
 def process_dataset(
-    dataset_path: Union[OrigExampleData, YCBSimulationData],
-    result_path: Path,
     config_path: Path,
 ):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    # preprocessor = module_from_config(config["preprocessor"])
+    dataset = module_from_config(config["dataset"])
+    preprocessor = dataset.transform
     model = module_from_config(config["model"])
     postprocessor = module_from_config(config["postprocessor"])
+    result_path = Path(config["result_path"]).expanduser()
     exporter = Exporter(
         export_dir=result_path, move_path_contents=True, max_json_elements=1000
     )
 
-    config["processed_datset"] = str(dataset.root_dir)
     result_path.mkdir(parents=True, exist_ok=True)
     with open(result_path / "inference_config.yaml", "w") as f:
         yaml.dump(config, f)
 
     for i in range(len(dataset)):
-        sample = dataset[i]
-        print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
+        full_pc, segmented_pc = dataset[i]
+        initial_sample = preprocessor.intermediate_results["initial_sample"]
 
-        full_pc, segmented_pc = preprocessor(sample)
+        print(f"Processing sample {initial_sample.name}... ({i+1}/{len(dataset)})")
+
         network_output = (pred_grasps_cam, scores, contact_pts, widths) = model(
             full_pc, segmented_pc
         )
@@ -57,7 +55,7 @@ def process_dataset(
         export_data = {
             "grasps_cam": grasps_cam,
             # "sample_segmentation": sample.segmentation,
-            "sample_rgb": Image.fromarray(sample.rgb),
+            "sample_rgb": Image.fromarray(initial_sample.rgb),
             # "sample_depth": sample.depth,
             # "sample_intrinsics": sample.cam_intrinsics,
             "full_pc": full_pc,
@@ -68,42 +66,11 @@ def process_dataset(
             ],
         }
 
-        exporter(export_data, sample.name)
+        exporter(export_data, initial_sample.name)
 
 
 if __name__ == "__main__":
-    # segmentation_id = 4.0
-    # process_dataset(
-    #     dataset=OrigExampleData(
-    #         get_root_dir() / "data" / "raw" / "orig_test_data",
-    #         transform=BinarySegmentationSample(segmentation_id),
-    #     ),
-    #     result_path=get_root_dir()
-    #     / "data"
-    #     / "results"
-    #     / f"orig_test_data_seg{int(segmentation_id)}",
-    #     config_path=get_root_dir() / "configs" / "default_inference.yaml",
-    # )
+    config_path = get_root_dir() / "configs" / "ycb_resize.yaml"
+    # config_path = get_root_dir() / "configs" / "examples_seg1.yaml"
 
-    skip_obj_names = [
-        "018_pitcher_base",
-        "019_bleach_cleanser",
-        "021_bowl",
-        "025_plate",
-        "026_fork",
-        "039_hammer",
-        "042_large_clamp",
-        "056_b_cups",
-        "058_d_cups",
-        "059_e_cups",
-        "084_j_lego_duplo",
-    ]
-    i = 3
-    process_dataset(
-        dataset=YCBSimulationData(
-            Path.home() / "Documents" / f"ycb_sim_data_{i}",
-            invalid_objs=skip_obj_names,
-        ),
-        result_path=get_root_dir() / "data" / "results" / f"ycb_sim_data_{i}",
-        config_path=get_root_dir() / "configs" / "default_inference.yaml",
-    )
+    process_dataset(config_path)
