@@ -3,10 +3,9 @@ from typing import Union, List
 
 import yaml
 from PIL import Image
-import appdirs
 
+from contact_graspnet.preprocessing import BinarySegmentationSample
 from contact_graspnet.dataloading import OrigExampleData, YCBSimulationData
-from contact_graspnet.utils.visualization import mlab_pose_vis
 from contact_graspnet.utils.export import Exporter
 from contact_graspnet.utils.config import module_from_config
 from contact_graspnet.utils.misc import get_root_dir
@@ -21,7 +20,6 @@ def process_dataset(
     result_path: Path,
     config_path: Path,
     skip_obj_ids: List[int] = None,
-    segmentation_id: int = None,
 ):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -47,7 +45,7 @@ def process_dataset(
         sample = dataset[i]
         print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
 
-        full_pc, segmented_pc = preprocessor(sample, segmentation_id)
+        full_pc, segmented_pc = preprocessor(sample)
         network_output = (pred_grasps_cam, scores, contact_pts, widths) = model(
             full_pc, segmented_pc
         )
@@ -73,13 +71,15 @@ def process_dataset(
 if __name__ == "__main__":
     # segmentation_id = 4.0
     # process_dataset(
-    #     dataset=OrigExampleData(get_root_dir() / "data" / "raw" / "orig_test_data"),
+    #     dataset=OrigExampleData(
+    #         get_root_dir() / "data" / "raw" / "orig_test_data",
+    #         transform=BinarySegmentationSample(segmentation_id),
+    #     ),
     #     result_path=get_root_dir()
     #     / "data"
     #     / "results"
     #     / f"orig_test_data_seg{int(segmentation_id)}",
     #     config_path=get_root_dir() / "configs" / "default_inference.yaml",
-    #     segmentation_id=segmentation_id,
     # )
 
     skip_obj_ids = [17, 18, 19, 22, 23, 34, 36, 50, 51, 52, 74]

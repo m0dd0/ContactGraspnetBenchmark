@@ -59,14 +59,9 @@ class UniversalPreprocessor(PreprocessorBase):
     def __call__(
         self,
         sample: Union[OrigExampleDataSample, YCBSimulationDataSample],
-        seg_id: int = None,
     ) -> Tuple[NDArray[Shape["N,3"], Float], NDArray[Shape["M,3"], Float]]:
-        segmentation = sample.segmentation
-        if seg_id is not None:
-            segmentation = segmentation == seg_id
-
         assert (
-            len(np.unique(segmentation)) == 2
+            len(np.unique(sample.segmentation)) == 2
         ), "Segmentation should only contain two classes or segmentation id needs to be specified."
 
         full_pc, full_pc_colors = self.depth2points_converter(sample.depth, sample.rgb)
@@ -74,7 +69,7 @@ class UniversalPreprocessor(PreprocessorBase):
         full_pc, full_pc_colors = self.z_clipper(full_pc, full_pc_colors)
 
         segmented_pc, segmented_pc_colors = self.depth2points_converter(
-            sample.depth, sample.rgb, segmentation
+            sample.depth, sample.rgb, sample.segmentation
         )
         segmented_pc = self.img2cam_converter(segmented_pc, sample.cam_intrinsics)
         segmented_pc, segmented_pc_colors = self.z_clipper(

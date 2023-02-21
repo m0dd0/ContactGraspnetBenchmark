@@ -4,10 +4,24 @@ execute a singe transformation step.
 They might also be used directly in a Compose to make a descriptive pipeline.
 """
 
-from typing import Tuple
+from typing import Tuple, Union
+from copy import deepcopy
 
 import numpy as np
 from nptyping import NDArray, Shape, Float, Int
+
+from contact_graspnet.datatypes import YCBSimulationDataSample, OrigExampleDataSample
+
+
+class BinarySegmentationSample:
+    def __init__(self, segmentation_id: int):
+        self.segmentation_id = segmentation_id
+
+    def __call__(self, sample: Union[YCBSimulationDataSample, OrigExampleDataSample]):
+        sample = deepcopy(sample)
+        sample.segmentation = sample.segmentation == self.segmentation_id
+
+        return sample
 
 
 class Depth2ImgPoints:
