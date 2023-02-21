@@ -43,8 +43,16 @@ class YCBSimulationData:
         if self.invalid_objs is None:
             self.invalid_objs = []
 
+        self.all_sample_names = sorted(
+            [
+                p.parts[-1]
+                for p in self.root_dir.iterdir()
+                if p.suffix == ".npz" and p.stem not in self.invalid_objs
+            ]
+        )
+
     def __len__(self):
-        return len(list(self.root_dir.glob("*.npz")))
+        return len(self.all_sample_names)
 
     def __getitem__(self, index: int) -> YCBSimulationDataSample:
         if index >= len(self):
@@ -52,14 +60,7 @@ class YCBSimulationData:
                 f"Index {index} out of range for dataset with length {len(self)}"
             )
 
-        all_sample_names = [
-            p.parts[-1]
-            for p in self.root_dir.iterdir()
-            if p.suffix == ".npz" and p.stem not in self.invalid_objs
-        ]
-
-        all_sample_names = sorted(all_sample_names)
-        sample_name = all_sample_names[index]
+        sample_name = self.all_sample_names[index]
         sample_path = self.root_dir / sample_name
 
         simulation_data = np.load(sample_path)
