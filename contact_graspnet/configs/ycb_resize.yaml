@@ -16,6 +16,12 @@ dataset:
     z_clipper:
       class: "contact_graspnet.preprocessing.ZClipper"
       z_range: [0.2, 1.8]
+    segmentation_binarizer: null
+      # class: "contact_graspnet.preprocessing.SegmentationBinarizer"
+      # segmentation_id: 1.0
+    resizer:
+      class: "contact_graspnet.preprocessing.Resizer":
+      target_size: [720, 1280]
 
 postprocessor:
   class: "contact_graspnet.postprocessing.Postprocessor"
