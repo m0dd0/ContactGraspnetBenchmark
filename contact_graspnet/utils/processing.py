@@ -19,7 +19,6 @@ def process_dataset(
     dataset: Union[OrigExampleData, YCBSimulationData],
     result_path: Path,
     config_path: Path,
-    skip_obj_ids: List[int] = None,
 ):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -38,10 +37,6 @@ def process_dataset(
         yaml.dump(config, f)
 
     for i in range(len(dataset)):
-        if skip_obj_ids is not None and i in skip_obj_ids:
-            print(f"Skipping sample {i}... ({i+1}/{len(dataset)})")
-            continue
-
         sample = dataset[i]
         print(f"Processing sample {sample.name}... ({i+1}/{len(dataset)})")
 
@@ -82,11 +77,25 @@ if __name__ == "__main__":
     #     config_path=get_root_dir() / "configs" / "default_inference.yaml",
     # )
 
-    skip_obj_ids = [17, 18, 19, 22, 23, 34, 36, 50, 51, 52, 74]
+    skip_obj_names = [
+        "018_pitcher_base",
+        "019_bleach_cleanser",
+        "021_bowl",
+        "025_plate",
+        "026_fork",
+        "039_hammer",
+        "042_large_clamp",
+        "056_b_cups",
+        "058_d_cups",
+        "059_e_cups",
+        "084_j_lego_duplo",
+    ]
     i = 3
     process_dataset(
-        dataset=YCBSimulationData(Path.home() / "Documents" / f"ycb_sim_data_{i}"),
+        dataset=YCBSimulationData(
+            Path.home() / "Documents" / f"ycb_sim_data_{i}",
+            invalid_objs=skip_obj_names,
+        ),
         result_path=get_root_dir() / "data" / "results" / f"ycb_sim_data_{i}",
         config_path=get_root_dir() / "configs" / "default_inference.yaml",
-        skip_obj_ids=skip_obj_ids,
     )

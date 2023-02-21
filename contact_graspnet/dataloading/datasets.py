@@ -9,7 +9,7 @@ datatypes.sample instance as input.
 """
 
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -33,9 +33,15 @@ from ..datatypes import YCBSimulationDataSample, OrigExampleDataSample
 
 
 class YCBSimulationData:
-    def __init__(self, root_dir: Path, transform: Callable = None):
+    def __init__(
+        self, root_dir: Path, invalid_objs: List[str] = None, transform: Callable = None
+    ):
         self.root_dir = Path(root_dir)
         self.transform = transform
+
+        self.invalid_objs = invalid_objs
+        if self.invalid_objs is None:
+            self.invalid_objs = []
 
     def __len__(self):
         return len(list(self.root_dir.glob("*.npz")))
@@ -47,7 +53,9 @@ class YCBSimulationData:
             )
 
         all_sample_names = [
-            p.parts[-1] for p in self.root_dir.iterdir() if p.suffix == ".npz"
+            p.parts[-1]
+            for p in self.root_dir.iterdir()
+            if p.suffix == ".npz" and p.stem not in self.invalid_objs
         ]
 
         all_sample_names = sorted(all_sample_names)
