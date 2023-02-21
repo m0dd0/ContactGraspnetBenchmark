@@ -5,7 +5,7 @@ model:
 
 dataset:
   class: "contact_graspnet.dataloading.YCBSimulationData"
-  root_dir: "~/Documents/ycb_sim_data_1"
+  root_dir: "~/Documents/ycb_sim_data_4"
   invalid_objs: [018_pitcher_base", "019_bleach_cleanser", "021_bowl", "025_plate", "026_fork", "039_hammer", "042_large_clamp", "056_b_cups", "058_d_cups", "059_e_cups", "084_j_lego_duplo"]
   transform:
     class: "contact_graspnet.preprocessing.UniversalPreprocessor"
@@ -29,5 +29,5 @@ postprocessor:
     # class: "contact_graspnet.postprocessing.TopSoreFilter"
     # top_k: 3 
 
-result_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/results/ycb1_no_resize"
+result_path: "~/Documents/ContactGraspnetBenchmark/contact_graspnet/data/results/ycb4_no_resize"
   

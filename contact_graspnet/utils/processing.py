@@ -70,7 +70,7 @@ def process_dataset(
 
 
 if __name__ == "__main__":
-    config_path = get_root_dir() / "configs" / "ycb_resize.yaml"
-    # config_path = get_root_dir() / "configs" / "examples_seg1.yaml"
+    config_path = get_root_dir() / "configs" / "ycb.yaml"
+    # config_path = get_root_dir() / "configs" / "examples.yaml"
 
     process_dataset(config_path)
