@@ -28,7 +28,7 @@ from typing import Any, Dict, Tuple, List
 
 from nptyping import NDArray, Shape, Float
 
-from contact_graspnet.datatypes import ResultBase, GraspCam
+from contact_graspnet.datatypes import ResultBase, GraspCam, GraspWorld
 from . import custom_transforms as CT
 
 
@@ -86,3 +86,31 @@ class Postprocessor(PostprocessorBase):
             top_grasps = self.top_score_filter(grasps_cam)
 
         return top_grasps
+
+
+class Cam2WorldGraspConverter:
+    def __init__(
+        self,
+        coord_converter: CT.Cam2WorldCoordConverter = None,
+        orientation_converter: CT.Cam2WorldOrientationConverter = None,
+    ):
+        self.coord_converter = coord_converter or CT.Cam2WorldCoordConverter()
+        self.orientation_converter = (
+            orientation_converter or CT.Cam2WorldOrientationConverter()
+        )
+
+    def __call__(
+        self,
+        grasp_cam: GraspCam,
+        cam_pos: NDArray[Shape["3"], Float],
+        cam_rot: NDArray[Shape["3,3"], Float],
+    ) -> GraspWorld:
+        return GraspWorld(
+            score=grasp_cam.score,
+            contact_point=self.coord_converter(
+                grasp_cam.contact_point, cam_pos, cam_rot
+            ),
+            pos=self.coord_converter(grasp_cam.pos, cam_pos, cam_rot),
+            orientation=self.orientation_converter(grasp_cam.orientation, cam_rot),
+            width=grasp_cam.width,
+        )
