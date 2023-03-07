@@ -39,3 +39,15 @@ def setup_tensorflow():
     tf.disable_eager_execution()
     physical_devices = tf.config.experimental.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
+def exists_in_subfolder(path: Path, subfolder: Path) -> Path:
+    path = Path(path)
+
+    if not path.exists():
+        path = subfolder / path
+
+    if not path.exists():
+        raise FileNotFoundError(f"Model path {path} does not exist.")
+
+    return path
