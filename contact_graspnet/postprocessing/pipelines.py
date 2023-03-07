@@ -28,7 +28,7 @@ from typing import Any, Dict, Tuple, List
 
 from nptyping import NDArray, Shape, Float
 
-from contact_graspnet.datatypes import ResultBase, GraspCam, GraspWorld
+from contact_graspnet.datatypes import ResultBase, GraspCam, GraspWorld, GraspPaperCam
 from . import custom_transforms as CT
 
 
@@ -51,10 +51,17 @@ class PostprocessorBase(ABC):
 
 
 class Postprocessor(PostprocessorBase):
-    def __init__(self, top_score_filter: CT.TopScoreFilter):
+    def __init__(
+        self,
+        top_score_filter: CT.TopScoreFilter,
+        paper2sim_grasp_converter: CT.Paper2SimGraspConverter = None,
+    ):
         super().__init__()
 
         self.top_score_filter = top_score_filter
+        self.paper2sim_grasp_converter = (
+            paper2sim_grasp_converter or CT.Paper2SimGraspConverter()
+        )
 
     def __call__(
         self,
@@ -65,21 +72,26 @@ class Postprocessor(PostprocessorBase):
             NDArray[Shape["N"], Float],
         ],
     ) -> List[GraspCam]:
-        grasps_cam = []
+        grasps_paper_cam = []
         for pose, score, contact_point, width in zip(
             network_output[0], network_output[1], network_output[2], network_output[3]
         ):
-            grasps_cam.append(
-                GraspCam(
+            grasps_paper_cam.append(
+                GraspPaperCam(
                     score=score,
                     contact_point=contact_point,
-                    pos=pose[:3, 3],
-                    orientation=pose[:3, :3],
+                    pose=pose,
                     width=width,
                 )
             )
 
-        self.intermediate_results["all_grasps"] = grasps_cam
+        self.intermediate_results["all_grasps_paper"] = grasps_paper_cam
+
+        grasps_cam = [
+            self.paper2sim_grasp_converter(grasp) for grasp in grasps_paper_cam
+        ]
+
+        self.intermediate_results["all_grasps_sim"] = grasps_cam
 
         top_grasps = grasps_cam
         if self.top_score_filter is not None:
