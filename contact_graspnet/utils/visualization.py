@@ -13,11 +13,41 @@ from matplotlib import pyplot as plt
 import numpy as np
 from nptyping import NDArray, Shape, Int, Float
 import mayavi.mlab as mlab
+import matplotlib as mpl
 
 # from contact_graspnet.utils.misc import posrot2pose
 from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
 from contact_graspnet.datatypes import GraspPaperCam, GraspWorld
 from contact_graspnet.postprocessing import World2ImgCoordConverter
+
+
+def set_axes_equal(ax):
+    """Make axes of 3D plot have equal scale so that spheres appear as spheres,
+    cubes as cubes, etc..  This is one possible solution to Matplotlib's
+    ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
+
+    Input
+      ax: a matplotlib axis, e.g., as output from plt.gca().
+    """
+
+    x_limits = ax.get_xlim3d()
+    y_limits = ax.get_ylim3d()
+    z_limits = ax.get_zlim3d()
+
+    x_range = abs(x_limits[1] - x_limits[0])
+    x_middle = np.mean(x_limits)
+    y_range = abs(y_limits[1] - y_limits[0])
+    y_middle = np.mean(y_limits)
+    z_range = abs(z_limits[1] - z_limits[0])
+    z_middle = np.mean(z_limits)
+
+    # The plot bounding box is a sphere in the sense of the infinity
+    # norm, hence I call half the max range the plot radius.
+    plot_radius = 0.5 * max([x_range, y_range, z_range])
+
+    ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
+    ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
+    ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
 
 def make_tensor_displayable(
@@ -103,7 +133,7 @@ def mlab_pose_vis(
         mlab.close()
 
 
-def world_grasps_ax(
+def world_grasps_center_ax(
     ax,
     orig_rgb,
     grasps: List[GraspWorld],
@@ -145,6 +175,36 @@ def world_grasps_ax(
                 + f"w: {round(grasp.width, 3)}",
                 xy=center_img[0:2],
             )
+
+
+def grasp6D_ax(
+    ax: mpl.axes.Axes,
+    grasp: GraspWorld,
+    pc_world: NDArray[Shape["N, 3"], Float],
+    pc_colors: NDArray[Shape["N, 3"], Float] = None,
+    pointsize: float = 0.1,
+):
+    ax.scatter(
+        pc_world[:, 0], pc_world[:, 1], pc_world[:, 2], c=pc_colors / 255, s=pointsize
+    )
+
+    a = grasp.orientation[:, 2].flatten() * 0.5
+    a_axis_points = np.array([grasp.position, grasp.position - a]).T
+    ax.plot(
+        xs=a_axis_points[0],
+        ys=a_axis_points[1],
+        zs=a_axis_points[2],
+        zorder=1,
+    )
+
+    b = grasp.orientation[:, 0].flatten() * 0.5
+    b_axis_points = np.array([grasp.position + 0.5 * b, grasp.position - 0.5 * b]).T
+    ax.plot(
+        xs=b_axis_points[0],
+        ys=b_axis_points[1],
+        zs=b_axis_points[2],
+        zorder=1,
+    )
 
 
 def overview_fig(
