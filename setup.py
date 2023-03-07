@@ -33,7 +33,7 @@ setuptools.setup(
         "tabulate",
         "scikit-image",
     ],
-    extras_require={"dev": ["black", "pylint", "jupyter"]},
+    extras_require={"dev": ["black", "pylint", "jupyter", "ipykernel", "ipympl"]},
     include_package_data=True,
     use_scm_version=True,
 )
