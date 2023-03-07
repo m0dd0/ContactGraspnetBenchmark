@@ -90,39 +90,3 @@ class UniversalPreprocessor(PreprocessorBase):
         self.intermediate_results["initial_sample"] = sample
 
         return full_pc, segmented_pc
-
-
-# class YCBPreprocessor(UniversalPreprocessor):
-#     def __init__(
-#         self,
-#         depth2points_converter: CT.Depth2ImgPoints,
-#         img2cam_converter: CT.Img2CamCoords,
-#         z_clipper: CT.ZClipper,
-#         resizer: CT.Resizer = None,
-#     ):
-#         super().__init__(depth2points_converter, img2cam_converter, z_clipper, resizer)
-
-
-# class YCBSimulationPreprocessor(PreprocessorBase):
-#     def __init__(self, z_clipper: CT.ZClipper, segmenter: CT.YCBSegmenter = None):
-#         super().__init__()
-
-#         self.z_clipper = z_clipper
-#         self.segmenter = segmenter
-
-#     def __call__(self, sample: YCBSimulationDataSample) -> NDArray[Shape["N,3"], Float]:
-#         points = sample.points
-#         points_color = sample.points_color
-
-#         if self.segmenter is not None:
-#             points, points_color = self.segmenter(sample)
-
-#         if self.z_clipper is not None:
-#             points, points_color = self.z_clipper(points, points_color)
-
-#         self.intermediate_results["pointcloud_colors"] = points_color
-
-#         return points
-
-
-# other preprocessors for other datasets or with completely different preprocessing pipelines ...
