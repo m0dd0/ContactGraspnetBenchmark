@@ -28,7 +28,7 @@ setuptools.setup(
         "matplotlib",
         "pyqt5",
         # the dependencies below have been added during refactoring
-        "npytyping",  # for tf tensors we use string annotations for now
+        "nptyping",  # for tf tensors we use string annotations for now
         "appdirs",
         "tabulate",
         "scikit-image",
