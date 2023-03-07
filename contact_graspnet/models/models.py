@@ -14,6 +14,7 @@ from .base import BaseModel
 from contact_graspnet.orig.contact_graspnet.contact_grasp_estimator import (
     GraspEstimator,
 )
+from contact_graspnet.utils.misc import exists_in_subfolder, get_root_dir
 
 
 class ContactGraspnet(BaseModel):
@@ -22,6 +23,11 @@ class ContactGraspnet(BaseModel):
 
         config_path = Path(config_path).expanduser()
         checkpoint_dir = Path(checkpoint_dir).expanduser()
+
+        checkpoint_dir = exists_in_subfolder(
+            checkpoint_dir, get_root_dir() / "checkpoints"
+        )
+        config_path = exists_in_subfolder(config_path, checkpoint_dir)
 
         # TODO recator grasp estimator
 
