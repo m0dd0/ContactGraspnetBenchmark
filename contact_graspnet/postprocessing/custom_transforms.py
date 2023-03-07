@@ -8,7 +8,7 @@ from typing import List
 from nptyping import NDArray, Shape, Float
 import numpy as np
 
-from contact_graspnet.datatypes import GraspCam
+from contact_graspnet.datatypes import GraspCam, GraspPaperCam
 
 
 class TopScoreFilter:
@@ -57,3 +57,26 @@ class Cam2WorldOrientationConverter:
         orientation_world = cam_rot_inv @ orientation
 
         return orientation_world
+
+
+class Paper2SimGraspConverter:
+    def __init__(self):
+        pass
+
+    def __call__(
+        self,
+        grasp_paper: GraspPaperCam,
+    ) -> GraspCam:
+        position = (
+            grasp_paper.contact_point
+            + 0.5 * grasp_paper.width * grasp_paper.pose[:3, 0].flatten()
+        )
+
+        grasp_sim = GraspCam(
+            score=grasp_paper.score,
+            position=position,
+            orientation=grasp_paper.pose[:3, :3],
+            width=grasp_paper.width,
+        )
+
+        return grasp_sim
