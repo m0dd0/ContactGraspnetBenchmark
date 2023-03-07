@@ -66,7 +66,6 @@ class GraspCam(ResultBase):
 @dataclass
 class GraspWorld(ResultBase):
     score: float
-    pos: NDArray[Shape["3"], Float]
+    position: NDArray[Shape["3"], Float]
     orientation: NDArray[Shape["3, 3"], Float]
-    contact_point: NDArray[Shape["3"], Float]
     width: float

@@ -14,7 +14,7 @@ import numpy as np
 from nptyping import NDArray, Shape, Int, Float
 import mayavi.mlab as mlab
 
-from contact_graspnet.utils.misc import posrot2pose
+# from contact_graspnet.utils.misc import posrot2pose
 from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
 from contact_graspnet.datatypes import GraspCam
 
@@ -87,9 +87,7 @@ def mlab_pose_vis(
 ):
     orig_vis.visualize_grasps(
         full_pc=pointcloud,
-        pred_grasps_cam={
-            -1: np.array([posrot2pose(g.pos, g.orientation) for g in grasps])
-        },
+        pred_grasps_cam={-1: np.array([g.pose for g in grasps])},
         scores={-1: np.array([g.score for g in grasps])},
         plot_opencv_cam=False,
         pc_colors=pointcloud_colors,

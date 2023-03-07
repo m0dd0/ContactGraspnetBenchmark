@@ -119,10 +119,7 @@ class Cam2WorldGraspConverter:
     ) -> GraspWorld:
         return GraspWorld(
             score=grasp_cam.score,
-            contact_point=self.coord_converter(
-                grasp_cam.contact_point, cam_pos, cam_rot
-            ),
-            pos=self.coord_converter(grasp_cam.pos, cam_pos, cam_rot),
+            position=self.coord_converter(grasp_cam.position, cam_pos, cam_rot),
             orientation=self.orientation_converter(grasp_cam.orientation, cam_rot),
             width=grasp_cam.width,
         )
