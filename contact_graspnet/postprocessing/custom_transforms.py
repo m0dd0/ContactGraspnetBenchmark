@@ -80,3 +80,28 @@ class Paper2SimGraspConverter:
         )
 
         return grasp_sim
+
+
+class World2ImgCoordConverter:
+    def __call__(
+        self,
+        p_world: NDArray[Shape["3"], Float],
+        cam_intrinsics: NDArray[Shape["3,3"], Float],
+        cam_rot: NDArray[Shape["3,3"], Float],
+        cam_pos: NDArray[Shape["3"], Float],
+    ) -> NDArray[Shape["2"], Float]:
+        # p_cam = R @ (p_world - T)
+        # p_img_h = K @ p_cam = [[p_ix*p_cz]
+        #                        [p_iy*p_cz]
+        #                        [p_cz     ]]
+        # p_img = [[p_ix]  = (p_img_h / p_cz)[:2] = (p_img_h / p_img_h[2])[:2]
+        #           p_iy]]
+
+        cam_pos = cam_pos.reshape((3, 1))  # (3,1)
+
+        p_world = p_world.reshape((3, 1))  # (3,1)
+        p_cam = cam_rot @ (p_world - cam_pos)
+        p_img_h = cam_intrinsics @ p_cam
+        p_img = (p_img_h / p_img_h[2])[:2].flatten()  # (2,)
+
+        return p_img

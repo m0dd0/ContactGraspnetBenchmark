@@ -16,7 +16,8 @@ import mayavi.mlab as mlab
 
 # from contact_graspnet.utils.misc import posrot2pose
 from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
-from contact_graspnet.datatypes import GraspCam
+from contact_graspnet.datatypes import GraspPaperCam, GraspWorld
+from contact_graspnet.postprocessing import World2ImgCoordConverter
 
 
 def make_tensor_displayable(
@@ -80,7 +81,7 @@ def visualize_pointcloud(
 
 def mlab_pose_vis(
     pointcloud: NDArray[Shape["N, 3"], Float],
-    grasps: List[GraspCam],
+    grasps: List[GraspPaperCam],
     pointcloud_colors: NDArray[Shape["N, 3"], Float] = None,
     image_path: Path = None,
     image_size: Tuple = (640, 480),
@@ -100,6 +101,50 @@ def mlab_pose_vis(
     else:
         mlab.savefig(str(image_path), size=image_size)
         mlab.close()
+
+
+def world_grasps_ax(
+    ax,
+    orig_rgb,
+    grasps: List[GraspWorld],
+    cam_intrinsics,
+    cam_rot,
+    cam_pos,
+    annotate: bool = True,
+):
+    ax.imshow(orig_rgb)
+
+    world2img_converter = World2ImgCoordConverter()
+
+    for grasp in grasps:
+        center_img = world2img_converter(
+            grasp.position, cam_intrinsics, cam_rot, cam_pos
+        )
+        ax.scatter(x=center_img[0], y=center_img[1])
+
+        # antipodal_points_world = get_antipodal_points(
+        #     grasp.center[0:2], grasp.angle, grasp.width
+        # )
+        # antipodal_points_world = np.hstack(
+        #     (antipodal_points_world, np.full((2, 1), grasp.center[2]))
+        # )
+
+        # antipodal_points_img = np.array(
+        #     [
+        #         world2img_converter(p, cam_intrinsics, cam_rot, cam_pos)
+        #         for p in antipodal_points_world
+        #     ]
+        # )
+        # ax.plot(antipodal_points_img[:, 0], antipodal_points_img[:, 1])
+
+        if annotate:
+            ax.annotate(
+                f"c: {tuple(grasp.position.round(3))}\n"
+                + f"q: {round(grasp.score, 3)}\n"
+                # + f"a: {round(np.rad2deg(grasp.angle), 3)}\n"
+                + f"w: {round(grasp.width, 3)}",
+                xy=center_img[0:2],
+            )
 
 
 def overview_fig(
