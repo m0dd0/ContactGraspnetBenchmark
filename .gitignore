@@ -1,2 +1,9 @@
-*.egg-info
+*.pyc
 __pycache__
+*.egg-info
+
+contact_graspnet/data/*
+# contact_graspnet/checkpoints/*
+notebooks/00_experiments.ipynb
+
+venv
