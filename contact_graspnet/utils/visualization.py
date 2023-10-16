@@ -6,19 +6,20 @@ Try to use functions which operate on matplotlib.Axes objects as this makes it e
 to combine the different visualizations.
 """
 
-from pathlib import Path
-from typing import Tuple, List
+from typing import List
 
 from matplotlib import pyplot as plt
 import numpy as np
-from nptyping import NDArray, Shape, Int, Float
-import mayavi.mlab as mlab
+from nptyping import NDArray, Shape, Float
+
 import matplotlib as mpl
 
-# from contact_graspnet.utils.misc import posrot2pose
-from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
-from contact_graspnet.datatypes import GraspPaperCam, GraspWorld
+from contact_graspnet.datatypes import GraspWorld
 from contact_graspnet.postprocessing import World2ImgCoordConverter
+
+# import mayavi.mlab as mlab
+# from contact_graspnet.utils.misc import posrot2pose
+# from contact_graspnet.orig.contact_graspnet import visualization_utils as orig_vis
 
 
 def set_axes_equal(ax):
@@ -109,28 +110,28 @@ def visualize_pointcloud(
     )
 
 
-def mlab_pose_vis(
-    pointcloud: NDArray[Shape["N, 3"], Float],
-    grasps: List[GraspPaperCam],
-    pointcloud_colors: NDArray[Shape["N, 3"], Float] = None,
-    image_path: Path = None,
-    image_size: Tuple = (640, 480),
-):
-    orig_vis.visualize_grasps(
-        full_pc=pointcloud,
-        pred_grasps_cam={-1: np.array([g.pose for g in grasps])},
-        scores={-1: np.array([g.score for g in grasps])},
-        plot_opencv_cam=False,
-        pc_colors=pointcloud_colors,
-        gripper_openings={-1: np.array([g.width for g in grasps])},
-        gripper_width=None,
-    )
+# def mlab_pose_vis(
+#     pointcloud: NDArray[Shape["N, 3"], Float],
+#     grasps: List[GraspPaperCam],
+#     pointcloud_colors: NDArray[Shape["N, 3"], Float] = None,
+#     image_path: Path = None,
+#     image_size: Tuple = (640, 480),
+# ):
+#     orig_vis.visualize_grasps(
+#         full_pc=pointcloud,
+#         pred_grasps_cam={-1: np.array([g.pose for g in grasps])},
+#         scores={-1: np.array([g.score for g in grasps])},
+#         plot_opencv_cam=False,
+#         pc_colors=pointcloud_colors,
+#         gripper_openings={-1: np.array([g.width for g in grasps])},
+#         gripper_width=None,
+#     )
 
-    if image_path is None:
-        mlab.show()
-    else:
-        mlab.savefig(str(image_path), size=image_size)
-        mlab.close()
+#     if image_path is None:
+#         mlab.show()
+#     else:
+#         mlab.savefig(str(image_path), size=image_size)
+#         mlab.close()
 
 
 def world_grasps_center_ax(
@@ -205,17 +206,3 @@ def grasp6D_ax(
         zs=b_axis_points[2],
         zorder=1,
     )
-
-
-def overview_fig(
-    # different data to visualize
-    fig=None,
-):
-    if fig is None:
-        fig = plt.figure()
-
-    # TODO add different data to visualize
-
-    raise NotImplementedError()
-
-    return fig
