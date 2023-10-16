@@ -24,16 +24,17 @@ setuptools.setup(
         "pyrender==0.1.43",
         "pyglet==1.5.9",
         "tqdm",
-        "mayavi",
         "matplotlib",
-        "pyqt5",
         # the dependencies below have been added during refactoring
         "nptyping",  # for tf tensors we use string annotations for now
         "appdirs",
         "tabulate",
         "scikit-image",
     ],
-    extras_require={"dev": ["black", "pylint", "jupyter", "ipykernel", "ipympl"]},
+    extras_require={
+        "dev": ["black", "pylint", "jupyter", "ipykernel", "ipympl"],
+        "visualization": ["mayavi", "pyqt5"],
+    },
     include_package_data=True,
     use_scm_version=True,
 )
