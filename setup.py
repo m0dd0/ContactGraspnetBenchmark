@@ -24,7 +24,7 @@ setuptools.setup(
         "pyrender==0.1.43",
         "pyglet==1.5.9",
         "tqdm",
-        "matplotlib",
+        "matplotlib>=3.5.0",
         # the dependencies below have been added during refactoring
         "nptyping",  # for tf tensors we use string annotations for now
         "appdirs",
